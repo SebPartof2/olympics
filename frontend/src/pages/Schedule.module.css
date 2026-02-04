@@ -54,7 +54,6 @@
 .roundsList {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
 .roundCard {
@@ -124,8 +123,166 @@
   content: '📍 ';
 }
 
-.roundStatus {
+.roundActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-left: auto;
+}
+
+.expandIcon {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.expandIcon.iconExpanded {
+  transform: rotate(180deg);
+}
+
+.matchCount {
+  font-size: 0.8rem;
+  color: var(--olympic-green);
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  background-color: rgba(0, 166, 81, 0.1);
+  border-radius: 4px;
+}
+
+.roundWrapper {
+  margin-bottom: 0.75rem;
+}
+
+.roundWrapper:last-child {
+  margin-bottom: 0;
+}
+
+.roundCard.clickable {
+  cursor: pointer;
+}
+
+.roundCard.expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Matches Panel */
+.matchesPanel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1rem;
+}
+
+.matchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.matchCard {
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  padding: 0.75rem;
+  position: relative;
+  border-left: 3px solid var(--border-color);
+}
+
+.matchCard.scheduled {
+  border-left-color: var(--text-secondary);
+}
+
+.matchCard.live {
+  border-left-color: var(--olympic-red);
+  background: linear-gradient(90deg, rgba(238, 51, 78, 0.08) 0%, var(--bg-primary) 100%);
+}
+
+.matchCard.completed {
+  border-left-color: var(--olympic-green);
+}
+
+.liveIndicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  background-color: var(--olympic-red);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.matchLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.matchTeams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.team.winner .teamName {
+  font-weight: 700;
+}
+
+.team.winner .score {
+  color: var(--olympic-green);
+  font-weight: 700;
+}
+
+.flag {
+  width: 24px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.teamName {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.score {
+  font-size: 1rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.eventLink {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--olympic-blue);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.eventLink:hover {
+  text-decoration: underline;
 }
 
 .empty {
@@ -144,8 +301,18 @@
     margin-bottom: 0.5rem;
   }
 
-  .roundStatus {
+  .roundActions {
     margin-left: 0;
     margin-top: 0.5rem;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .matchesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .matchCard {
+    padding: 1rem;
   }
 }

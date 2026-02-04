@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api, { formatLocalTime, formatLocalDate } from '../services/api';
 import { useOlympics } from '../context/OlympicsContext';
 import styles from './Schedule.module.css';
@@ -6,12 +7,14 @@ import styles from './Schedule.module.css';
 function Schedule() {
   const { selectedOlympics, selectedOlympicsId, isLoading: olympicsLoading } = useOlympics();
   const [schedule, setSchedule] = useState([]);
+  const [matches, setMatches] = useState([]);
   const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sportFilter, setSportFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [expandedRounds, setExpandedRounds] = useState(new Set());
 
   useEffect(() => {
     if (!olympicsLoading && selectedOlympicsId) {
@@ -22,12 +25,14 @@ function Schedule() {
   async function loadData() {
     try {
       setLoading(true);
-      const [scheduleData, sportsData] = await Promise.all([
+      const [scheduleData, sportsData, matchesData] = await Promise.all([
         api.getSchedule({ olympics: selectedOlympicsId }),
         api.getSports(),
+        api.getMatches({ olympics_id: selectedOlympicsId }),
       ]);
       setSchedule(scheduleData);
       setSports(sportsData);
+      setMatches(matchesData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -75,6 +80,22 @@ function Schedule() {
       cancelled: 'Cancelled',
     };
     return <span className={classes[status] || 'badge'}>{labels[status] || status}</span>;
+  }
+
+  function toggleRound(roundId) {
+    setExpandedRounds(prev => {
+      const next = new Set(prev);
+      if (next.has(roundId)) {
+        next.delete(roundId);
+      } else {
+        next.add(roundId);
+      }
+      return next;
+    });
+  }
+
+  function getMatchesForRound(roundId) {
+    return matches.filter(m => m.event_round_id === roundId);
   }
 
   // Filter schedule
@@ -169,33 +190,100 @@ function Schedule() {
             <div key={date} className={styles.dateGroup}>
               <h3 className={styles.dateHeader}>{date}</h3>
               <div className={styles.roundsList}>
-                {rounds.map((round) => (
-                  <div
-                    key={round.id}
-                    className={`${styles.roundCard} ${round.status === 'live' ? styles.live : ''} ${round.status === 'completed' ? styles.completed : ''}`}
-                  >
-                    <div className={styles.roundTime}>
-                      {formatLocalTime(round.start_time_utc).split(',').pop().trim()}
-                    </div>
-                    <div className={styles.roundInfo}>
-                      <div className={styles.roundName}>
-                        {formatEventName(round.medal_event_name, round.gender)}
-                        {round.round_name ? ` - ${round.round_name}` : ` - ${getRoundTypeLabel(round.round_type)}${round.round_number > 1 ? ` ${round.round_number}` : ''}`}
+                {rounds.map((round) => {
+                  const roundMatches = getMatchesForRound(round.id);
+                  const hasMatches = roundMatches.length > 0;
+                  const isExpanded = expandedRounds.has(round.id);
+
+                  return (
+                    <div key={round.id} className={styles.roundWrapper}>
+                      <div
+                        className={`${styles.roundCard} ${round.status === 'live' ? styles.live : ''} ${round.status === 'completed' ? styles.completed : ''} ${hasMatches ? styles.clickable : ''} ${isExpanded ? styles.expanded : ''}`}
+                        onClick={() => hasMatches && toggleRound(round.id)}
+                        role={hasMatches ? 'button' : undefined}
+                        tabIndex={hasMatches ? 0 : undefined}
+                      >
+                        <div className={styles.roundTime}>
+                          {formatLocalTime(round.start_time_utc).split(',').pop().trim()}
+                        </div>
+                        <div className={styles.roundInfo}>
+                          <div className={styles.roundName}>
+                            {formatEventName(round.medal_event_name, round.gender)}
+                            {round.round_name ? ` - ${round.round_name}` : ` - ${getRoundTypeLabel(round.round_type)}${round.round_number > 1 ? ` ${round.round_number}` : ''}`}
+                          </div>
+                          <div className={styles.roundMeta}>
+                            <span className={styles.roundSport}>{round.sport_name}</span>
+                            {(round.round_venue || round.event_venue) && (
+                              <span className={styles.roundVenue}>
+                                {round.round_venue || round.event_venue}
+                              </span>
+                            )}
+                            {hasMatches && (
+                              <span className={styles.matchCount}>
+                                {roundMatches.length} match{roundMatches.length !== 1 ? 'es' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.roundActions}>
+                          {getStatusBadge(round.status)}
+                          {hasMatches && (
+                            <span className={`${styles.expandIcon} ${isExpanded ? styles.iconExpanded : ''}`}>
+                              ▼
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className={styles.roundMeta}>
-                        <span className={styles.roundSport}>{round.sport_name}</span>
-                        {(round.round_venue || round.event_venue) && (
-                          <span className={styles.roundVenue}>
-                            {round.round_venue || round.event_venue}
-                          </span>
-                        )}
-                      </div>
+
+                      {/* Expanded matches */}
+                      {isExpanded && hasMatches && (
+                        <div className={styles.matchesPanel}>
+                          <div className={styles.matchesGrid}>
+                            {roundMatches.map((match) => (
+                              <div key={match.id} className={`${styles.matchCard} ${styles[match.status]}`}>
+                                {match.status === 'live' && (
+                                  <span className={styles.liveIndicator}>LIVE</span>
+                                )}
+                                {match.match_name && (
+                                  <div className={styles.matchLabel}>{match.match_name}</div>
+                                )}
+                                <div className={styles.matchTeams}>
+                                  <div className={`${styles.team} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                                    {match.team_a_flag_url && (
+                                      <img src={match.team_a_flag_url} alt="" className={styles.flag} />
+                                    )}
+                                    <span className={styles.teamName}>
+                                      {match.team_a_country_code || match.team_a_name || 'TBD'}
+                                    </span>
+                                    <span className={styles.score}>
+                                      {match.team_a_score ?? '-'}
+                                    </span>
+                                  </div>
+                                  <div className={`${styles.team} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                                    <span className={styles.score}>
+                                      {match.team_b_score ?? '-'}
+                                    </span>
+                                    <span className={styles.teamName}>
+                                      {match.team_b_country_code || match.team_b_name || 'TBD'}
+                                    </span>
+                                    {match.team_b_flag_url && (
+                                      <img src={match.team_b_flag_url} alt="" className={styles.flag} />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {round.medal_event_id && (
+                            <Link to={`/events/${round.medal_event_id}`} className={styles.eventLink}>
+                              View full event details →
+                            </Link>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className={styles.roundStatus}>
-                      {getStatusBadge(round.status)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))
