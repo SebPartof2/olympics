@@ -14,10 +14,12 @@ function Live() {
   const loadData = useCallback(async () => {
     if (!selectedOlympicsId) return;
     try {
-      const [rounds, matchesData] = await Promise.all([
-        api.getLiveRounds(selectedOlympicsId),
-        api.getMatches({ olympics_id: selectedOlympicsId, status: 'live' }),
-      ]);
+      const rounds = await api.getLiveRounds(selectedOlympicsId);
+      // Get all matches for live rounds (not just matches with 'live' status)
+      const roundIds = rounds.map(r => r.id);
+      const matchesData = roundIds.length > 0
+        ? await api.getMatches({ olympics_id: selectedOlympicsId })
+        : [];
       setLiveRounds(rounds);
       setMatches(matchesData);
       setError(null);
