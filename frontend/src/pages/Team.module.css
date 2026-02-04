@@ -367,6 +367,64 @@
   text-decoration: underline;
 }
 
+/* Round Cards (non-match events) */
+.roundCard {
+  position: relative;
+  display: block;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid var(--olympic-blue);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.roundCard:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.roundCard.scheduled {
+  border-left-color: var(--text-secondary);
+}
+
+.roundCard.live {
+  border-left-color: var(--olympic-red);
+  background: linear-gradient(90deg, rgba(238, 51, 78, 0.05) 0%, var(--bg-primary) 100%);
+}
+
+.roundCard.completed {
+  border-left-color: var(--olympic-green);
+}
+
+.roundContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.participatingLabel {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  background-color: rgba(0, 133, 199, 0.1);
+  color: var(--olympic-blue);
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.venueInfo {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.venueInfo::before {
+  content: '📍 ';
+}
+
 /* Events List */
 .eventsList {
   display: flex;
@@ -604,6 +662,12 @@
   .tab {
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
+  }
+
+  .roundContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .eventCard {

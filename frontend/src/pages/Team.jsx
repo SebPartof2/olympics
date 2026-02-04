@@ -11,6 +11,20 @@ function formatEventName(name, gender) {
   return prefix ? `${prefix} ${name}` : name;
 }
 
+const ROUND_TYPES = {
+  heat: 'Heat',
+  repechage: 'Repechage',
+  quarterfinal: 'Quarterfinal',
+  semifinal: 'Semifinal',
+  final: 'Final',
+  bronze_final: 'Bronze Final',
+  group_stage: 'Group Stage',
+  round_robin: 'Round Robin',
+  knockout: 'Knockout',
+  qualification: 'Qualification',
+  preliminary: 'Preliminary',
+};
+
 function Team() {
   const { countryCode } = useParams();
   const { selectedOlympics, selectedOlympicsId, isLoading: olympicsLoading } = useOlympics();
@@ -18,6 +32,7 @@ function Team() {
   const [matches, setMatches] = useState([]);
   const [allMatches, setAllMatches] = useState([]);
   const [participatingEvents, setParticipatingEvents] = useState([]);
+  const [participatingRounds, setParticipatingRounds] = useState([]);
   const [medals, setMedals] = useState({ gold: 0, silver: 0, bronze: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,11 +64,12 @@ function Team() {
 
       setCountry(foundCountry);
 
-      // Get matches, medals, and event participations in parallel
-      const [matchesData, medalsData, participantsData] = await Promise.all([
+      // Get matches, medals, event participations, and schedule in parallel
+      const [matchesData, medalsData, participantsData, scheduleData] = await Promise.all([
         api.getMatches(selectedOlympicsId ? { olympics_id: selectedOlympicsId } : {}),
         api.getMedalStandings(selectedOlympicsId),
         api.getEventParticipants({ country: foundCountry.id, olympics: selectedOlympicsId }),
+        api.getSchedule(selectedOlympicsId ? { olympics: selectedOlympicsId } : {}),
       ]);
 
       // Store all matches for event view
@@ -75,6 +91,27 @@ function Team() {
 
       // Get event IDs that have country matches
       const eventIdsWithCountryMatches = new Set(countryMatches.map(m => m.medal_event_id).filter(Boolean));
+
+      // Get medal event IDs the country participates in
+      const participatingEventIds = new Set(participantsData.map(p => p.medal_event_id));
+
+      // Filter rounds for events the country participates in (without direct matches)
+      const countryRounds = scheduleData.filter(round => {
+        // Only include rounds for events the country participates in
+        if (!participatingEventIds.has(round.medal_event_id)) return false;
+        // Exclude events where the country already has direct matches
+        if (eventIdsWithCountryMatches.has(round.medal_event_id)) return false;
+        return true;
+      });
+
+      // Sort rounds by start time
+      countryRounds.sort((a, b) => {
+        if (!a.start_time_utc) return 1;
+        if (!b.start_time_utc) return -1;
+        return new Date(a.start_time_utc) - new Date(b.start_time_utc);
+      });
+
+      setParticipatingRounds(countryRounds);
 
       // Filter participating events - only those without country's direct matches
       const eventsWithoutCountryMatches = participantsData.filter(
@@ -99,33 +136,52 @@ function Team() {
     }
   }
 
-  // Filter matches by tab
-  const filteredMatches = matches.filter(m => {
+  // Combine matches and rounds into schedule items
+  const scheduleItems = [
+    ...matches.map(m => ({ ...m, itemType: 'match' })),
+    ...participatingRounds.map(r => ({ ...r, itemType: 'round' })),
+  ];
+
+  // Sort all items by start time
+  scheduleItems.sort((a, b) => {
+    if (!a.start_time_utc) return 1;
+    if (!b.start_time_utc) return -1;
+    return new Date(a.start_time_utc) - new Date(b.start_time_utc);
+  });
+
+  // Filter schedule items by tab
+  const filteredItems = scheduleItems.filter(item => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'live') return m.status === 'live';
-    if (activeTab === 'upcoming') return m.status === 'scheduled';
-    if (activeTab === 'results') return m.status === 'completed';
+    if (activeTab === 'live') return item.status === 'live';
+    if (activeTab === 'upcoming') return item.status === 'scheduled';
+    if (activeTab === 'results') return item.status === 'completed';
     return true;
   });
 
-  // Group matches by date
-  const matchesByDate = filteredMatches.reduce((groups, match) => {
-    const date = match.start_time_utc
-      ? formatLocalDate(match.start_time_utc)
+  // Group items by date
+  const itemsByDate = filteredItems.reduce((groups, item) => {
+    const date = item.start_time_utc
+      ? formatLocalDate(item.start_time_utc)
       : 'Date TBD';
     if (!groups[date]) groups[date] = [];
-    groups[date].push(match);
+    groups[date].push(item);
     return groups;
   }, {});
 
-  // Count by status
+  // Count by status (matches + rounds)
   const statusCounts = {
-    all: matches.length,
-    live: matches.filter(m => m.status === 'live').length,
-    upcoming: matches.filter(m => m.status === 'scheduled').length,
-    results: matches.filter(m => m.status === 'completed').length,
+    all: scheduleItems.length,
+    live: scheduleItems.filter(item => item.status === 'live').length,
+    upcoming: scheduleItems.filter(item => item.status === 'scheduled').length,
+    results: scheduleItems.filter(item => item.status === 'completed').length,
     events: participatingEvents.length,
   };
+
+  function getRoundName(round) {
+    if (round.round_name) return round.round_name;
+    const label = ROUND_TYPES[round.round_type] || round.round_type;
+    return round.round_number > 1 ? `${label} ${round.round_number}` : label;
+  }
 
   function isWinner(match, countryId) {
     if (match.status !== 'completed') return false;
@@ -357,19 +413,62 @@ function Team() {
             })}
           </div>
         ) : (
-          // Matches tabs
-          Object.keys(matchesByDate).length > 0 ? (
-            Object.entries(matchesByDate).map(([date, dateMatches]) => (
+          // Schedule tabs (matches + rounds)
+          Object.keys(itemsByDate).length > 0 ? (
+            Object.entries(itemsByDate).map(([date, dateItems]) => (
               <div key={date} className={styles.dateGroup}>
                 <h3 className={styles.dateHeader}>{date}</h3>
                 <div className={styles.matchesList}>
-                  {dateMatches.map(match => {
+                  {dateItems.map(item => {
+                    if (item.itemType === 'round') {
+                      // Render round (non-match event)
+                      return (
+                        <Link
+                          key={`round-${item.id}`}
+                          to={`/events/${item.medal_event_id}`}
+                          className={`${styles.roundCard} ${styles[item.status]}`}
+                        >
+                          {item.status === 'live' && (
+                            <span className={styles.liveIndicator}>LIVE</span>
+                          )}
+
+                          <div className={styles.matchMeta}>
+                            <span className={styles.sportName}>{item.sport_name}</span>
+                            <span className={styles.eventName}>
+                              {formatEventName(item.medal_event_name, item.gender)}
+                            </span>
+                            <span className={styles.roundName}>{getRoundName(item)}</span>
+                          </div>
+
+                          <div className={styles.roundContent}>
+                            <span className={styles.participatingLabel}>Participating</span>
+                            {(item.round_venue || item.event_venue) && (
+                              <span className={styles.venueInfo}>{item.round_venue || item.event_venue}</span>
+                            )}
+                          </div>
+
+                          <div className={styles.matchFooter}>
+                            {item.start_time_utc && (
+                              <span className={styles.matchTime}>
+                                {formatLocalTime(item.start_time_utc).split(',').pop().trim()}
+                              </span>
+                            )}
+                            <span className={`badge badge-${item.status}`}>
+                              {item.status === 'scheduled' ? 'Scheduled' : item.status === 'live' ? 'Live' : 'Completed'}
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    }
+
+                    // Render match
+                    const match = item;
                     const isTeamA = match.team_a_country_id === country.id;
                     const result = getMatchResult(match, country.id);
 
                     return (
                       <div
-                        key={match.id}
+                        key={`match-${match.id}`}
                         className={`${styles.matchCard} ${styles[match.status]} ${result ? styles[result] : ''}`}
                       >
                         {match.status === 'live' && (
@@ -439,11 +538,11 @@ function Team() {
             ))
           ) : (
             <p className={styles.empty}>
-              {matches.length === 0
+              {scheduleItems.length === 0
                 ? participatingEvents.length > 0
-                  ? `No matches scheduled for ${country.name} yet. Check the Events tab to see registered events.`
-                  : `No matches scheduled for ${country.name} yet.`
-                : 'No matches match the selected filter.'}
+                  ? `No schedule for ${country.name} yet. Check the Events tab to see registered events.`
+                  : `No schedule for ${country.name} yet.`
+                : 'No items match the selected filter.'}
             </p>
           )
         )}
