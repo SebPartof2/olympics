@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Home from './pages/Home';
 import Medals from './pages/Medals';
+import Events from './pages/Events';
 import Schedule from './pages/Schedule';
 import Live from './pages/Live';
 import Admin from './pages/Admin';
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/medals" element={<Medals />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/live" element={<Live />} />
           <Route path="/admin" element={<Admin />} />

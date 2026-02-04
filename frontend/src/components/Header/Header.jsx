@@ -44,6 +44,12 @@ function Header() {
             Medals
           </NavLink>
           <NavLink
+            to="/events"
+            className={({ isActive }) => isActive ? styles.active : ''}
+          >
+            Events
+          </NavLink>
+          <NavLink
             to="/schedule"
             className={({ isActive }) => isActive ? styles.active : ''}
           >

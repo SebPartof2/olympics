@@ -1,0 +1,267 @@
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  color: var(--text-secondary);
+}
+
+.stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  min-width: 100px;
+}
+
+.statNumber {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--olympic-blue);
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: var(--bg-secondary);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+}
+
+.filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 140px;
+  background-color: var(--bg-secondary);
+}
+
+.filter:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+}
+
+.eventsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sportGroup {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.sportHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--olympic-blue);
+}
+
+.sportIcon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.eventCount {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.eventsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.eventCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  border-left: 4px solid var(--border-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.eventCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.eventCard.upcoming {
+  border-left-color: var(--olympic-blue);
+}
+
+.eventCard.in-progress {
+  border-left-color: var(--olympic-yellow);
+  background: linear-gradient(90deg, rgba(252, 176, 64, 0.08) 0%, var(--bg-primary) 100%);
+}
+
+.eventCard.completed {
+  border-left-color: var(--olympic-green);
+  background: linear-gradient(90deg, rgba(0, 166, 81, 0.05) 0%, var(--bg-primary) 100%);
+}
+
+.eventInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.eventName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+
+.eventMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.venue::before {
+  content: '📍 ';
+}
+
+.date::before {
+  content: '📅 ';
+}
+
+.eventStats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.roundCount {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.medalIndicators {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.medalDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.medalDot.gold {
+  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+  box-shadow: 0 1px 3px rgba(218, 165, 32, 0.4);
+}
+
+.medalDot.silver {
+  background: linear-gradient(135deg, #e8e8e8 0%, #a8a8a8 100%);
+  box-shadow: 0 1px 3px rgba(168, 168, 168, 0.4);
+}
+
+.medalDot.bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%);
+  box-shadow: 0 1px 3px rgba(160, 82, 45, 0.4);
+}
+
+.noMedals {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .stats {
+    justify-content: center;
+  }
+
+  .stat {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.75rem 1rem;
+  }
+
+  .statNumber {
+    font-size: 1.5rem;
+  }
+
+  .eventsList {
+    grid-template-columns: 1fr;
+  }
+
+  .eventCard {
+    flex-wrap: wrap;
+  }
+
+  .eventStats {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+}
