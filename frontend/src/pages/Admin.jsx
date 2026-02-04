@@ -404,17 +404,49 @@ function Admin() {
               <div className={styles.formGrid}>
                 <div className="form-group">
                   <label>Default Timezone (for data entry)</label>
-                  <select value={settingsForm.default_timezone} onChange={(e) => setSettingsForm({ ...settingsForm, default_timezone: e.target.value })}>
-                    <option value="America/New_York">Eastern Time (ET)</option>
-                    <option value="America/Chicago">Central Time (CT)</option>
-                    <option value="America/Denver">Mountain Time (MT)</option>
-                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                    <option value="Europe/London">London (GMT/BST)</option>
-                    <option value="Europe/Paris">Paris (CET/CEST)</option>
-                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                    <option value="Australia/Sydney">Sydney (AEST)</option>
+                  <input
+                    type="text"
+                    list="timezone-list"
+                    value={settingsForm.default_timezone}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, default_timezone: e.target.value })}
+                    placeholder="e.g., America/New_York"
+                  />
+                  <datalist id="timezone-list">
                     <option value="UTC">UTC</option>
-                  </select>
+                    <option value="America/New_York">America/New_York (ET)</option>
+                    <option value="America/Chicago">America/Chicago (CT)</option>
+                    <option value="America/Denver">America/Denver (MT)</option>
+                    <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+                    <option value="America/Anchorage">America/Anchorage (AKT)</option>
+                    <option value="America/Phoenix">America/Phoenix (MST)</option>
+                    <option value="America/Toronto">America/Toronto (ET)</option>
+                    <option value="America/Vancouver">America/Vancouver (PT)</option>
+                    <option value="America/Mexico_City">America/Mexico_City (CST)</option>
+                    <option value="America/Sao_Paulo">America/Sao_Paulo (BRT)</option>
+                    <option value="America/Buenos_Aires">America/Buenos_Aires (ART)</option>
+                    <option value="Europe/London">Europe/London (GMT/BST)</option>
+                    <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+                    <option value="Europe/Berlin">Europe/Berlin (CET/CEST)</option>
+                    <option value="Europe/Rome">Europe/Rome (CET/CEST)</option>
+                    <option value="Europe/Madrid">Europe/Madrid (CET/CEST)</option>
+                    <option value="Europe/Amsterdam">Europe/Amsterdam (CET/CEST)</option>
+                    <option value="Europe/Moscow">Europe/Moscow (MSK)</option>
+                    <option value="Europe/Istanbul">Europe/Istanbul (TRT)</option>
+                    <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                    <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                    <option value="Asia/Bangkok">Asia/Bangkok (ICT)</option>
+                    <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+                    <option value="Asia/Hong_Kong">Asia/Hong_Kong (HKT)</option>
+                    <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
+                    <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                    <option value="Asia/Seoul">Asia/Seoul (KST)</option>
+                    <option value="Australia/Perth">Australia/Perth (AWST)</option>
+                    <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                    <option value="Australia/Melbourne">Australia/Melbourne (AEST)</option>
+                    <option value="Pacific/Auckland">Pacific/Auckland (NZST)</option>
+                    <option value="Pacific/Honolulu">Pacific/Honolulu (HST)</option>
+                  </datalist>
+                  <small className={styles.hint}>Enter any valid IANA timezone (e.g., Europe/Paris, Asia/Tokyo)</small>
                 </div>
               </div>
               <button type="submit" className="btn btn-primary">Save Settings</button>
