@@ -8,4 +8,4 @@ ADMIN_PASSWORD = "olympics-admin-2024"
 [[d1_databases]]
 binding = "DB"
 database_name = "olympics-db"
-database_id = "local"
+database_id = "bdfa45a5-f007-4235-bab5-bbdd404f970b"
