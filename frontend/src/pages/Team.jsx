@@ -89,8 +89,8 @@ function Team() {
 
       setMatches(countryMatches);
 
-      // Get round IDs that have matches involving the country
-      const roundIdsWithCountryMatches = new Set(countryMatches.map(m => m.event_round_id).filter(Boolean));
+      // Get round IDs that have ANY matches (not just country matches)
+      const roundIdsWithAnyMatches = new Set(matchesData.map(m => m.event_round_id).filter(Boolean));
 
       // Get event IDs that have country matches (for the Events tab)
       const eventIdsWithCountryMatches = new Set(countryMatches.map(m => m.medal_event_id).filter(Boolean));
@@ -98,12 +98,12 @@ function Team() {
       // Get medal event IDs the country participates in
       const participatingEventIds = new Set(participantsData.map(p => p.medal_event_id));
 
-      // Filter rounds for events the country participates in (only rounds without country matches)
+      // Filter rounds for events the country participates in (only rounds without ANY matches)
       const countryRounds = scheduleData.filter(round => {
         // Only include rounds for events the country participates in
         if (!participatingEventIds.has(round.medal_event_id)) return false;
-        // Exclude rounds where the country already has direct matches
-        if (roundIdsWithCountryMatches.has(round.id)) return false;
+        // Exclude rounds that have any matches defined
+        if (roundIdsWithAnyMatches.has(round.id)) return false;
         return true;
       });
 
