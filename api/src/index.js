@@ -494,7 +494,7 @@ export default {
         const olympics_id = url.searchParams.get('olympics');
         let query = `
           SELECT m.*, c.name as country_name, c.code as country_code, c.flag_url as country_flag_url,
-            me.name as event_name, me.olympics_id, s.name as sport_name, s.icon_url as sport_icon_url
+            me.name as event_name, me.gender, me.olympics_id, s.name as sport_name, s.icon_url as sport_icon_url
           FROM medals m
           LEFT JOIN countries c ON m.country_id = c.id
           LEFT JOIN medal_events me ON m.medal_event_id = me.id
@@ -603,7 +603,7 @@ export default {
           `).bind(olympicsFilter).all();
 
           upcomingRounds = await env.DB.prepare(`
-            SELECT r.*, me.name as medal_event_name, s.name as sport_name
+            SELECT r.*, me.name as medal_event_name, me.gender, s.name as sport_name
             FROM event_rounds r
             JOIN medal_events me ON r.medal_event_id = me.id
             LEFT JOIN sports s ON me.sport_id = s.id
@@ -613,7 +613,7 @@ export default {
           `).bind(olympicsFilter).all();
 
           liveNow = await env.DB.prepare(`
-            SELECT r.*, me.name as medal_event_name, s.name as sport_name
+            SELECT r.*, me.name as medal_event_name, me.gender, s.name as sport_name
             FROM event_rounds r
             JOIN medal_events me ON r.medal_event_id = me.id
             LEFT JOIN sports s ON me.sport_id = s.id
