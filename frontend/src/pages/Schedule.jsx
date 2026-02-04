@@ -8,6 +8,7 @@ function Schedule() {
   const { selectedOlympics, selectedOlympicsId, isLoading: olympicsLoading } = useOlympics();
   const [schedule, setSchedule] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [participants, setParticipants] = useState([]);
   const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,14 +26,16 @@ function Schedule() {
   async function loadData() {
     try {
       setLoading(true);
-      const [scheduleData, sportsData, matchesData] = await Promise.all([
+      const [scheduleData, sportsData, matchesData, participantsData] = await Promise.all([
         api.getSchedule({ olympics: selectedOlympicsId }),
         api.getSports(),
         api.getMatches({ olympics_id: selectedOlympicsId }),
+        api.getEventParticipants({ olympics: selectedOlympicsId }),
       ]);
       setSchedule(scheduleData);
       setSports(sportsData);
       setMatches(matchesData);
+      setParticipants(participantsData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,6 +99,10 @@ function Schedule() {
 
   function getMatchesForRound(roundId) {
     return matches.filter(m => m.event_round_id === roundId);
+  }
+
+  function getParticipantsForEvent(medalEventId) {
+    return participants.filter(p => p.medal_event_id === medalEventId);
   }
 
   // Filter schedule
@@ -192,16 +199,19 @@ function Schedule() {
               <div className={styles.roundsList}>
                 {rounds.map((round) => {
                   const roundMatches = getMatchesForRound(round.id);
+                  const eventParticipants = getParticipantsForEvent(round.medal_event_id);
                   const hasMatches = roundMatches.length > 0;
+                  const hasParticipants = !hasMatches && eventParticipants.length > 0;
+                  const isExpandable = hasMatches || hasParticipants;
                   const isExpanded = expandedRounds.has(round.id);
 
                   return (
                     <div key={round.id} className={styles.roundWrapper}>
                       <div
-                        className={`${styles.roundCard} ${round.status === 'live' ? styles.live : ''} ${round.status === 'completed' ? styles.completed : ''} ${hasMatches ? styles.clickable : ''} ${isExpanded ? styles.expanded : ''}`}
-                        onClick={() => hasMatches && toggleRound(round.id)}
-                        role={hasMatches ? 'button' : undefined}
-                        tabIndex={hasMatches ? 0 : undefined}
+                        className={`${styles.roundCard} ${round.status === 'live' ? styles.live : ''} ${round.status === 'completed' ? styles.completed : ''} ${isExpandable ? styles.clickable : ''} ${isExpanded ? styles.expanded : ''}`}
+                        onClick={() => isExpandable && toggleRound(round.id)}
+                        role={isExpandable ? 'button' : undefined}
+                        tabIndex={isExpandable ? 0 : undefined}
                       >
                         <div className={styles.roundTime}>
                           {formatLocalTime(round.start_time_utc).split(',').pop().trim()}
@@ -223,11 +233,16 @@ function Schedule() {
                                 {roundMatches.length} match{roundMatches.length !== 1 ? 'es' : ''}
                               </span>
                             )}
+                            {hasParticipants && (
+                              <span className={styles.participantCount}>
+                                {eventParticipants.length} countr{eventParticipants.length !== 1 ? 'ies' : 'y'}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className={styles.roundActions}>
                           {getStatusBadge(round.status)}
-                          {hasMatches && (
+                          {isExpandable && (
                             <span className={`${styles.expandIcon} ${isExpanded ? styles.iconExpanded : ''}`}>
                               ▼
                             </span>
@@ -235,45 +250,66 @@ function Schedule() {
                         </div>
                       </div>
 
-                      {/* Expanded matches */}
-                      {isExpanded && hasMatches && (
+                      {/* Expanded content */}
+                      {isExpanded && isExpandable && (
                         <div className={styles.matchesPanel}>
-                          <div className={styles.matchesGrid}>
-                            {roundMatches.map((match) => (
-                              <div key={match.id} className={`${styles.matchCard} ${styles[match.status]}`}>
-                                {match.status === 'live' && (
-                                  <span className={styles.liveIndicator}>LIVE</span>
-                                )}
-                                {match.match_name && (
-                                  <div className={styles.matchLabel}>{match.match_name}</div>
-                                )}
-                                <div className={styles.matchTeams}>
-                                  <div className={`${styles.team} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
-                                    {match.team_a_flag_url && (
-                                      <img src={match.team_a_flag_url} alt="" className={styles.flag} />
-                                    )}
-                                    <span className={styles.teamName}>
-                                      {match.team_a_country_code || match.team_a_name || 'TBD'}
-                                    </span>
-                                    <span className={styles.score}>
-                                      {match.team_a_score ?? '-'}
-                                    </span>
-                                  </div>
-                                  <div className={`${styles.team} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
-                                    <span className={styles.score}>
-                                      {match.team_b_score ?? '-'}
-                                    </span>
-                                    <span className={styles.teamName}>
-                                      {match.team_b_country_code || match.team_b_name || 'TBD'}
-                                    </span>
-                                    {match.team_b_flag_url && (
-                                      <img src={match.team_b_flag_url} alt="" className={styles.flag} />
-                                    )}
+                          {hasMatches ? (
+                            <div className={styles.matchesGrid}>
+                              {roundMatches.map((match) => (
+                                <div key={match.id} className={`${styles.matchCard} ${styles[match.status]}`}>
+                                  {match.status === 'live' && (
+                                    <span className={styles.liveIndicator}>LIVE</span>
+                                  )}
+                                  {match.match_name && (
+                                    <div className={styles.matchLabel}>{match.match_name}</div>
+                                  )}
+                                  <div className={styles.matchTeams}>
+                                    <div className={`${styles.team} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                                      {match.team_a_flag_url && (
+                                        <img src={match.team_a_flag_url} alt="" className={styles.flag} />
+                                      )}
+                                      <span className={styles.teamName}>
+                                        {match.team_a_country_code || match.team_a_name || 'TBD'}
+                                      </span>
+                                      <span className={styles.score}>
+                                        {match.team_a_score ?? '-'}
+                                      </span>
+                                    </div>
+                                    <div className={`${styles.team} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                                      <span className={styles.score}>
+                                        {match.team_b_score ?? '-'}
+                                      </span>
+                                      <span className={styles.teamName}>
+                                        {match.team_b_country_code || match.team_b_name || 'TBD'}
+                                      </span>
+                                      {match.team_b_flag_url && (
+                                        <img src={match.team_b_flag_url} alt="" className={styles.flag} />
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={styles.participantsGrid}>
+                              <div className={styles.participantsLabel}>Participating Countries:</div>
+                              <div className={styles.participantFlags}>
+                                {eventParticipants.map((p) => (
+                                  <Link
+                                    key={p.id}
+                                    to={`/team/${p.country_code}`}
+                                    className={styles.participantItem}
+                                    title={p.country_name}
+                                  >
+                                    {p.flag_url && (
+                                      <img src={p.flag_url} alt="" className={styles.flag} />
+                                    )}
+                                    <span className={styles.participantCode}>{p.country_code}</span>
+                                  </Link>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          )}
                           {round.medal_event_id && (
                             <Link to={`/events/${round.medal_event_id}`} className={styles.eventLink}>
                               View full event details →

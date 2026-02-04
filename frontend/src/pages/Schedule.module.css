@@ -291,6 +291,57 @@
   color: var(--text-secondary);
 }
 
+/* Participants display */
+.participantCount {
+  font-size: 0.8rem;
+  color: var(--olympic-blue);
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  background-color: rgba(0, 129, 200, 0.1);
+  border-radius: 4px;
+}
+
+.participantsGrid {
+  padding: 0.5rem 0;
+}
+
+.participantsLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.participantFlags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.participantItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background-color: var(--bg-primary);
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.participantItem:hover {
+  border-color: var(--olympic-blue);
+  background-color: rgba(0, 129, 200, 0.05);
+}
+
+.participantCode {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 @media (max-width: 600px) {
   .roundCard {
     flex-wrap: wrap;

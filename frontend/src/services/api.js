@@ -123,6 +123,35 @@ class ApiService {
     return this.request(`/medal-events/${id}`, { method: 'DELETE' });
   }
 
+  // Event Participants
+  async getEventParticipants(params = {}) {
+    const searchParams = new URLSearchParams(params).toString();
+    const endpoint = searchParams ? `/event-participants?${searchParams}` : '/event-participants';
+    return this.request(endpoint, { auth: false });
+  }
+
+  async getMedalEventParticipants(medalEventId) {
+    return this.request(`/medal-events/${medalEventId}/participants`, { auth: false });
+  }
+
+  async setMedalEventParticipants(medalEventId, countryIds) {
+    return this.request(`/medal-events/${medalEventId}/participants`, {
+      method: 'POST',
+      body: JSON.stringify({ country_ids: countryIds }),
+    });
+  }
+
+  async addEventParticipant(data) {
+    return this.request('/event-participants', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteEventParticipant(id) {
+    return this.request(`/event-participants/${id}`, { method: 'DELETE' });
+  }
+
   // Rounds (sub-events)
   async getRounds(params = {}) {
     const searchParams = new URLSearchParams(params).toString();

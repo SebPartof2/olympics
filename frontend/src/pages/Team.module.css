@@ -367,6 +367,49 @@
   text-decoration: underline;
 }
 
+/* Events List */
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.eventsHint {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.eventCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  border-left: 4px solid var(--olympic-blue);
+  transition: all 0.2s;
+}
+
+.eventCard:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.eventSport {
+  font-size: 0.85rem;
+  color: var(--olympic-blue);
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.eventTitle {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {

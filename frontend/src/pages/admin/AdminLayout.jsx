@@ -52,6 +52,7 @@ function AdminLayout() {
     { path: '/admin/countries', label: 'Countries' },
     { path: '/admin/sports', label: 'Sports' },
     { path: '/admin/events', label: 'Events' },
+    { path: '/admin/participants', label: 'Participants' },
     { path: '/admin/rounds', label: 'Rounds' },
     { path: '/admin/matches', label: 'Matches' },
     { path: '/admin/medals', label: 'Medals' },

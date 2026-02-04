@@ -15,6 +15,7 @@ import {
   AdminCountries,
   AdminSports,
   AdminEvents,
+  AdminParticipants,
   AdminRounds,
   AdminMatches,
   AdminMedals,
@@ -41,6 +42,7 @@ function App() {
             <Route path="countries" element={<AdminCountries />} />
             <Route path="sports" element={<AdminSports />} />
             <Route path="events" element={<AdminEvents />} />
+            <Route path="participants" element={<AdminParticipants />} />
             <Route path="rounds" element={<AdminRounds />} />
             <Route path="matches" element={<AdminMatches />} />
             <Route path="medals" element={<AdminMedals />} />

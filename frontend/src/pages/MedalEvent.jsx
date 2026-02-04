@@ -152,6 +152,28 @@ function MedalEvent() {
         </section>
       )}
 
+      {/* Participants Section */}
+      {event.participants && event.participants.length > 0 && (
+        <section className={styles.participantsSection}>
+          <h2>Participating Countries</h2>
+          <div className={styles.participantsList}>
+            {event.participants.map((participant) => (
+              <Link
+                key={participant.id}
+                to={`/team/${participant.country_code}`}
+                className={styles.participantCard}
+              >
+                {participant.flag_url && (
+                  <img src={participant.flag_url} alt="" className={styles.participantFlag} />
+                )}
+                <span className={styles.participantCode}>{participant.country_code}</span>
+                <span className={styles.participantName}>{participant.country_name}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Rounds Section */}
       <section className={styles.roundsSection}>
         <h2>Event Schedule</h2>

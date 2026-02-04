@@ -719,6 +719,61 @@
   font-weight: 400;
 }
 
+/* Participants page styles */
+.participantActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.countriesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.countryCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bg-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.countryCheckbox:hover {
+  background-color: var(--bg-secondary);
+}
+
+.countryCheckbox.selected {
+  border-color: var(--olympic-blue);
+  background-color: rgba(0, 129, 200, 0.05);
+}
+
+.countryCheckbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.countryCheckbox .countryCode {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--olympic-blue);
+  min-width: 32px;
+}
+
+.countryCheckbox .countryName {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 768px) {
   .formRow {
     grid-template-columns: 1fr;

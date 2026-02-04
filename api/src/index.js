@@ -241,7 +241,15 @@ export default {
             ORDER BY CASE m.medal_type WHEN 'gold' THEN 1 WHEN 'silver' THEN 2 WHEN 'bronze' THEN 3 END
           `).bind(id).all();
 
-          return jsonResponse({ ...event, rounds: rounds.results, medals: medals.results });
+          const participants = await env.DB.prepare(`
+            SELECT ep.*, c.name as country_name, c.code as country_code, c.flag_url
+            FROM event_participants ep
+            LEFT JOIN countries c ON ep.country_id = c.id
+            WHERE ep.medal_event_id = ?
+            ORDER BY ep.seed_position, c.name
+          `).bind(id).all();
+
+          return jsonResponse({ ...event, rounds: rounds.results, medals: medals.results, participants: participants.results });
         }
         if (method === 'PUT') {
           if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
@@ -255,6 +263,90 @@ export default {
           if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
           await env.DB.prepare('DELETE FROM medal_events WHERE id = ?').bind(id).run();
           return jsonResponse({ success: true, message: 'Medal event deleted' });
+        }
+      }
+
+      // ============ EVENT PARTICIPANTS ============
+      if (path === '/api/event-participants') {
+        if (method === 'GET') {
+          const medal_event_id = url.searchParams.get('medal_event');
+          const country_id = url.searchParams.get('country');
+          const olympics_id = url.searchParams.get('olympics');
+          let query = `
+            SELECT ep.*, c.name as country_name, c.code as country_code, c.flag_url,
+              me.name as medal_event_name, me.gender, me.olympics_id,
+              s.name as sport_name, s.id as sport_id
+            FROM event_participants ep
+            LEFT JOIN countries c ON ep.country_id = c.id
+            LEFT JOIN medal_events me ON ep.medal_event_id = me.id
+            LEFT JOIN sports s ON me.sport_id = s.id
+            WHERE 1=1
+          `;
+          const params = [];
+          if (medal_event_id) { query += ' AND ep.medal_event_id = ?'; params.push(medal_event_id); }
+          if (country_id) { query += ' AND ep.country_id = ?'; params.push(country_id); }
+          if (olympics_id) { query += ' AND me.olympics_id = ?'; params.push(olympics_id); }
+          query += ' ORDER BY me.name, ep.seed_position, c.name';
+          const stmt = env.DB.prepare(query);
+          const results = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+          return jsonResponse(results.results);
+        }
+        if (method === 'POST') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          const { medal_event_id, country_id, seed_position, notes } = await request.json();
+          if (!medal_event_id || !country_id) {
+            return errorResponse('medal_event_id and country_id are required');
+          }
+          try {
+            await env.DB.prepare(
+              'INSERT INTO event_participants (medal_event_id, country_id, seed_position, notes) VALUES (?, ?, ?, ?)'
+            ).bind(medal_event_id, country_id, seed_position || null, notes || null).run();
+            return jsonResponse({ success: true, message: 'Participant added' }, 201);
+          } catch (e) {
+            if (e.message.includes('UNIQUE')) {
+              return errorResponse('This country is already participating in this event', 400);
+            }
+            throw e;
+          }
+        }
+      }
+
+      if (path.match(/^\/api\/event-participants\/\d+$/)) {
+        const id = path.split('/').pop();
+        if (method === 'DELETE') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          await env.DB.prepare('DELETE FROM event_participants WHERE id = ?').bind(id).run();
+          return jsonResponse({ success: true, message: 'Participant removed' });
+        }
+      }
+
+      // Bulk add participants to an event
+      if (path.match(/^\/api\/medal-events\/\d+\/participants$/)) {
+        const eventId = path.split('/')[3];
+        if (method === 'GET') {
+          const results = await env.DB.prepare(`
+            SELECT ep.*, c.name as country_name, c.code as country_code, c.flag_url
+            FROM event_participants ep
+            LEFT JOIN countries c ON ep.country_id = c.id
+            WHERE ep.medal_event_id = ?
+            ORDER BY ep.seed_position, c.name
+          `).bind(eventId).all();
+          return jsonResponse(results.results);
+        }
+        if (method === 'POST') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          const { country_ids } = await request.json();
+          if (!country_ids || !Array.isArray(country_ids)) {
+            return errorResponse('country_ids array is required');
+          }
+          // Clear existing participants and add new ones
+          await env.DB.prepare('DELETE FROM event_participants WHERE medal_event_id = ?').bind(eventId).run();
+          for (const countryId of country_ids) {
+            await env.DB.prepare(
+              'INSERT INTO event_participants (medal_event_id, country_id) VALUES (?, ?)'
+            ).bind(eventId, countryId).run();
+          }
+          return jsonResponse({ success: true, message: `${country_ids.length} participants set` });
         }
       }
 

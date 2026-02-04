@@ -16,6 +16,7 @@ function Team() {
   const { selectedOlympics, selectedOlympicsId, isLoading: olympicsLoading } = useOlympics();
   const [country, setCountry] = useState(null);
   const [matches, setMatches] = useState([]);
+  const [participatingEvents, setParticipatingEvents] = useState([]);
   const [medals, setMedals] = useState({ gold: 0, silver: 0, bronze: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,10 +47,11 @@ function Team() {
 
       setCountry(foundCountry);
 
-      // Get matches and medals in parallel
-      const [matchesData, medalsData] = await Promise.all([
+      // Get matches, medals, and event participations in parallel
+      const [matchesData, medalsData, participantsData] = await Promise.all([
         api.getMatches(selectedOlympicsId ? { olympics_id: selectedOlympicsId } : {}),
         api.getMedalStandings(selectedOlympicsId),
+        api.getEventParticipants({ country: foundCountry.id, olympics: selectedOlympicsId }),
       ]);
 
       // Filter matches involving this country
@@ -65,6 +67,15 @@ function Team() {
       });
 
       setMatches(countryMatches);
+
+      // Get event IDs that have matches
+      const eventIdsWithMatches = new Set(countryMatches.map(m => m.medal_event_id).filter(Boolean));
+
+      // Filter participating events that don't have matches
+      const eventsWithoutMatches = participantsData.filter(
+        p => !eventIdsWithMatches.has(p.medal_event_id)
+      );
+      setParticipatingEvents(eventsWithoutMatches);
 
       // Find medal count for this country
       const countryMedals = medalsData.find(m => m.country_id === foundCountry.id);
@@ -108,6 +119,7 @@ function Team() {
     live: matches.filter(m => m.status === 'live').length,
     upcoming: matches.filter(m => m.status === 'scheduled').length,
     results: matches.filter(m => m.status === 'completed').length,
+    events: participatingEvents.length,
   };
 
   function isWinner(match, countryId) {
@@ -205,95 +217,127 @@ function Team() {
         >
           Results <span className={styles.tabCount}>{statusCounts.results}</span>
         </button>
+        {participatingEvents.length > 0 && (
+          <button
+            className={`${styles.tab} ${activeTab === 'events' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('events')}
+          >
+            Events <span className={styles.tabCount}>{statusCounts.events}</span>
+          </button>
+        )}
       </div>
 
-      {/* Matches List */}
+      {/* Content */}
       <div className="card">
-        {Object.keys(matchesByDate).length > 0 ? (
-          Object.entries(matchesByDate).map(([date, dateMatches]) => (
-            <div key={date} className={styles.dateGroup}>
-              <h3 className={styles.dateHeader}>{date}</h3>
-              <div className={styles.matchesList}>
-                {dateMatches.map(match => {
-                  const isTeamA = match.team_a_country_id === country.id;
-                  const result = getMatchResult(match, country.id);
-
-                  return (
-                    <div
-                      key={match.id}
-                      className={`${styles.matchCard} ${styles[match.status]} ${result ? styles[result] : ''}`}
-                    >
-                      {match.status === 'live' && (
-                        <span className={styles.liveIndicator}>LIVE</span>
-                      )}
-
-                      <div className={styles.matchMeta}>
-                        <span className={styles.sportName}>{match.sport_name}</span>
-                        <span className={styles.eventName}>
-                          {formatEventName(match.medal_event_name, match.gender)}
-                        </span>
-                        {match.round_name && (
-                          <span className={styles.roundName}>{match.round_name}</span>
-                        )}
-                        {match.match_name && (
-                          <span className={styles.matchName}>{match.match_name}</span>
-                        )}
-                      </div>
-
-                      <div className={styles.matchContent}>
-                        {/* Team A */}
-                        <div className={`${styles.team} ${isTeamA ? styles.highlight : ''} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
-                          {match.team_a_flag_url && (
-                            <img src={match.team_a_flag_url} alt="" className={styles.teamFlag} />
-                          )}
-                          <span className={styles.teamName}>
-                            {match.team_a_country_code || match.team_a_name || 'TBD'}
-                          </span>
-                          <span className={styles.score}>
-                            {match.team_a_score ?? '-'}
-                          </span>
-                        </div>
-
-                        <span className={styles.vs}>vs</span>
-
-                        {/* Team B */}
-                        <div className={`${styles.team} ${!isTeamA ? styles.highlight : ''} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
-                          <span className={styles.score}>
-                            {match.team_b_score ?? '-'}
-                          </span>
-                          <span className={styles.teamName}>
-                            {match.team_b_country_code || match.team_b_name || 'TBD'}
-                          </span>
-                          {match.team_b_flag_url && (
-                            <img src={match.team_b_flag_url} alt="" className={styles.teamFlag} />
-                          )}
-                        </div>
-                      </div>
-
-                      <div className={styles.matchFooter}>
-                        {match.start_time_utc && (
-                          <span className={styles.matchTime}>
-                            {formatLocalTime(match.start_time_utc).split(',').pop().trim()}
-                          </span>
-                        )}
-                        {result && (
-                          <span className={`${styles.resultBadge} ${styles[result]}`}>
-                            {result.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))
+        {activeTab === 'events' ? (
+          // Events tab - show participating events without matches
+          <div className={styles.eventsList}>
+            <p className={styles.eventsHint}>
+              Events {country.name} is registered for (no match schedule yet):
+            </p>
+            {participatingEvents.map(event => (
+              <Link
+                key={event.id}
+                to={`/events/${event.medal_event_id}`}
+                className={styles.eventCard}
+              >
+                <span className={styles.eventSport}>{event.sport_name}</span>
+                <span className={styles.eventTitle}>
+                  {formatEventName(event.medal_event_name, event.gender)}
+                </span>
+              </Link>
+            ))}
+          </div>
         ) : (
-          <p className={styles.empty}>
-            {matches.length === 0
-              ? `No matches scheduled for ${country.name} yet.`
-              : 'No matches match the selected filter.'}
-          </p>
+          // Matches tabs
+          Object.keys(matchesByDate).length > 0 ? (
+            Object.entries(matchesByDate).map(([date, dateMatches]) => (
+              <div key={date} className={styles.dateGroup}>
+                <h3 className={styles.dateHeader}>{date}</h3>
+                <div className={styles.matchesList}>
+                  {dateMatches.map(match => {
+                    const isTeamA = match.team_a_country_id === country.id;
+                    const result = getMatchResult(match, country.id);
+
+                    return (
+                      <div
+                        key={match.id}
+                        className={`${styles.matchCard} ${styles[match.status]} ${result ? styles[result] : ''}`}
+                      >
+                        {match.status === 'live' && (
+                          <span className={styles.liveIndicator}>LIVE</span>
+                        )}
+
+                        <div className={styles.matchMeta}>
+                          <span className={styles.sportName}>{match.sport_name}</span>
+                          <span className={styles.eventName}>
+                            {formatEventName(match.medal_event_name, match.gender)}
+                          </span>
+                          {match.round_name && (
+                            <span className={styles.roundName}>{match.round_name}</span>
+                          )}
+                          {match.match_name && (
+                            <span className={styles.matchName}>{match.match_name}</span>
+                          )}
+                        </div>
+
+                        <div className={styles.matchContent}>
+                          {/* Team A */}
+                          <div className={`${styles.team} ${isTeamA ? styles.highlight : ''} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                            {match.team_a_flag_url && (
+                              <img src={match.team_a_flag_url} alt="" className={styles.teamFlag} />
+                            )}
+                            <span className={styles.teamName}>
+                              {match.team_a_country_code || match.team_a_name || 'TBD'}
+                            </span>
+                            <span className={styles.score}>
+                              {match.team_a_score ?? '-'}
+                            </span>
+                          </div>
+
+                          <span className={styles.vs}>vs</span>
+
+                          {/* Team B */}
+                          <div className={`${styles.team} ${!isTeamA ? styles.highlight : ''} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                            <span className={styles.score}>
+                              {match.team_b_score ?? '-'}
+                            </span>
+                            <span className={styles.teamName}>
+                              {match.team_b_country_code || match.team_b_name || 'TBD'}
+                            </span>
+                            {match.team_b_flag_url && (
+                              <img src={match.team_b_flag_url} alt="" className={styles.teamFlag} />
+                            )}
+                          </div>
+                        </div>
+
+                        <div className={styles.matchFooter}>
+                          {match.start_time_utc && (
+                            <span className={styles.matchTime}>
+                              {formatLocalTime(match.start_time_utc).split(',').pop().trim()}
+                            </span>
+                          )}
+                          {result && (
+                            <span className={`${styles.resultBadge} ${styles[result]}`}>
+                              {result.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className={styles.empty}>
+              {matches.length === 0
+                ? participatingEvents.length > 0
+                  ? `No matches scheduled for ${country.name} yet. Check the Events tab to see registered events.`
+                  : `No matches scheduled for ${country.name} yet.`
+                : 'No matches match the selected filter.'}
+            </p>
+          )
         )}
       </div>
 
