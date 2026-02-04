@@ -208,7 +208,7 @@ function MedalEvent() {
                             {roundMatches.map((match) => (
                               <div key={match.id} className={`${styles.matchCard} ${styles[match.status]}`}>
                                 <div className={styles.matchTeams}>
-                                  <div className={`${styles.team} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                                  <div className={`${styles.team} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_a_country_id) ? styles.winner : ''}`}>
                                     {match.team_a_flag_url && (
                                       <img src={match.team_a_flag_url} alt="" className={styles.flag} />
                                     )}
@@ -218,7 +218,7 @@ function MedalEvent() {
                                     <span className={styles.score}>{match.team_a_score || '-'}</span>
                                   </div>
                                   <span className={styles.vs}>vs</span>
-                                  <div className={`${styles.team} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                                  <div className={`${styles.team} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_b_country_id) ? styles.winner : ''}`}>
                                     <span className={styles.score}>{match.team_b_score || '-'}</span>
                                     <span className={styles.teamName}>
                                       {match.team_b_country_code || match.team_b_name || 'TBD'}

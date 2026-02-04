@@ -264,7 +264,7 @@ function Schedule() {
                                     <div className={styles.matchLabel}>{match.match_name}</div>
                                   )}
                                   <div className={styles.matchTeams}>
-                                    <div className={`${styles.team} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                                    <div className={`${styles.team} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_a_country_id) ? styles.winner : ''}`}>
                                       {match.team_a_flag_url && (
                                         <img src={match.team_a_flag_url} alt="" className={styles.flag} />
                                       )}
@@ -275,7 +275,7 @@ function Schedule() {
                                         {match.team_a_score ?? '-'}
                                       </span>
                                     </div>
-                                    <div className={`${styles.team} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                                    <div className={`${styles.team} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_b_country_id) ? styles.winner : ''}`}>
                                       <span className={styles.score}>
                                         {match.team_b_score ?? '-'}
                                       </span>

@@ -185,13 +185,15 @@ function Team() {
 
   function isWinner(match, countryId) {
     if (match.status !== 'completed') return false;
-    return match.winner_country_id === countryId;
+    return Number(match.winner_country_id) === Number(countryId);
   }
 
   function getMatchResult(match, countryId) {
     if (match.status !== 'completed') return null;
-    if (match.winner_country_id === countryId) return 'win';
-    if (match.winner_country_id && match.winner_country_id !== countryId) return 'loss';
+    const winnerId = match.winner_country_id ? Number(match.winner_country_id) : null;
+    const ourId = Number(countryId);
+    if (winnerId === ourId) return 'win';
+    if (winnerId && winnerId !== ourId) return 'loss';
     return 'draw';
   }
 
@@ -380,7 +382,7 @@ function Team() {
                               )}
                             </div>
                             <div className={styles.eventMatchTeams}>
-                              <div className={`${styles.eventTeam} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                              <div className={`${styles.eventTeam} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_a_country_id) ? styles.winner : ''}`}>
                                 {match.team_a_flag_url && (
                                   <img src={match.team_a_flag_url} alt="" className={styles.teamFlag} />
                                 )}
@@ -390,7 +392,7 @@ function Team() {
                                 <span className={styles.eventScore}>{match.team_a_score ?? '-'}</span>
                               </div>
                               <span className={styles.eventVs}>vs</span>
-                              <div className={`${styles.eventTeam} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                              <div className={`${styles.eventTeam} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_b_country_id) ? styles.winner : ''}`}>
                                 <span className={styles.eventScore}>{match.team_b_score ?? '-'}</span>
                                 <span className={!isTeamA && involvesCountry ? styles.ourTeam : ''}>
                                   {match.team_b_country_code || match.team_b_name || 'TBD'}
@@ -490,7 +492,7 @@ function Team() {
 
                         <div className={styles.matchContent}>
                           {/* Team A */}
-                          <div className={`${styles.team} ${isTeamA ? styles.highlight : ''} ${match.winner_country_id === match.team_a_country_id ? styles.winner : ''}`}>
+                          <div className={`${styles.team} ${isTeamA ? styles.highlight : ''} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_a_country_id) ? styles.winner : ''}`}>
                             {match.team_a_flag_url && (
                               <img src={match.team_a_flag_url} alt="" className={styles.teamFlag} />
                             )}
@@ -505,7 +507,7 @@ function Team() {
                           <span className={styles.vs}>vs</span>
 
                           {/* Team B */}
-                          <div className={`${styles.team} ${!isTeamA ? styles.highlight : ''} ${match.winner_country_id === match.team_b_country_id ? styles.winner : ''}`}>
+                          <div className={`${styles.team} ${!isTeamA ? styles.highlight : ''} ${match.winner_country_id && Number(match.winner_country_id) === Number(match.team_b_country_id) ? styles.winner : ''}`}>
                             <span className={styles.score}>
                               {match.team_b_score ?? '-'}
                             </span>
