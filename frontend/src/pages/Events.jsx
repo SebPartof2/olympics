@@ -169,7 +169,7 @@ function Events() {
                 {groupedEvents[sportName].map((event) => {
                   const status = getMedalStatus(event);
                   return (
-                    <div key={event.id} className={`${styles.eventCard} ${styles[status]}`}>
+                    <Link key={event.id} to={`/events/${event.id}`} className={`${styles.eventCard} ${styles[status]}`}>
                       <div className={styles.eventInfo}>
                         <div className={styles.eventName}>
                           {getGenderLabel(event.gender)} {event.name}
@@ -199,7 +199,7 @@ function Events() {
                           {event.medal_count === 0 && <span className={styles.noMedals}>No medals yet</span>}
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

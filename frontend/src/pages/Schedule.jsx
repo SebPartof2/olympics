@@ -44,11 +44,18 @@ function Schedule() {
       final: 'Final',
       bronze_final: 'Bronze Final',
       group_stage: 'Group Stage',
+      round_robin: 'Round Robin',
       knockout: 'Knockout',
       qualification: 'Qualification',
       preliminary: 'Preliminary',
     };
     return labels[type] || type;
+  }
+
+  function formatEventName(name, gender) {
+    if (!gender || gender === 'mixed') return name;
+    const prefix = gender === 'men' ? "Men's" : "Women's";
+    return `${prefix} ${name}`;
   }
 
   function getStatusBadge(status) {
@@ -171,16 +178,11 @@ function Schedule() {
                     </div>
                     <div className={styles.roundInfo}>
                       <div className={styles.roundName}>
-                        {round.medal_event_name}
+                        {formatEventName(round.medal_event_name, round.gender)}
                         {round.round_name ? ` - ${round.round_name}` : ` - ${getRoundTypeLabel(round.round_type)}${round.round_number > 1 ? ` ${round.round_number}` : ''}`}
                       </div>
                       <div className={styles.roundMeta}>
                         <span className={styles.roundSport}>{round.sport_name}</span>
-                        {round.gender && round.gender !== 'mixed' && (
-                          <span className={styles.roundGender}>
-                            {round.gender === 'men' ? "Men's" : "Women's"}
-                          </span>
-                        )}
                         {(round.round_venue || round.event_venue) && (
                           <span className={styles.roundVenue}>
                             {round.round_venue || round.event_venue}
