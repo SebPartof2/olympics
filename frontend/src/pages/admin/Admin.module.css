@@ -648,9 +648,7 @@
 }
 
 .matchDeleteBtn {
-  display: block;
-  width: 100%;
-  margin-top: 0.75rem;
+  flex: 1;
   padding: 0.5rem;
   background-color: transparent;
   border: 1px solid var(--olympic-red);
@@ -671,6 +669,54 @@
   text-align: center;
   color: var(--text-secondary);
   font-style: italic;
+}
+
+/* Form title for edit/add modes */
+.formTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+/* Form action buttons row */
+.formActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Match card action buttons */
+.matchCardActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.matchEditBtn {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: transparent;
+  border: 1px solid var(--olympic-blue);
+  color: var(--olympic-blue);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.matchEditBtn:hover {
+  background-color: var(--olympic-blue);
+  color: white;
+}
+
+/* Round group sport name */
+.roundGroupSport {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  font-weight: 400;
 }
 
 @media (max-width: 768px) {

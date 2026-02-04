@@ -33,8 +33,9 @@ function getRoundLabel(round) {
 }
 
 function getFullRoundLabel(round) {
+  const sport = round.sport_name || '';
   const eventName = formatEventName(round.medal_event_name, round.gender);
-  return `${eventName} — ${getRoundLabel(round)}`;
+  return `${sport}: ${eventName} — ${getRoundLabel(round)}`;
 }
 
 function AdminMatches() {
@@ -45,6 +46,7 @@ function AdminMatches() {
   const [matches, setMatches] = useState([]);
   const [filterRoundId, setFilterRoundId] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingMatch, setEditingMatch] = useState(null);
   const [form, setForm] = useState({
     event_round_id: '',
     match_name: '',
@@ -75,27 +77,66 @@ function AdminMatches() {
     }
   }
 
+  function resetForm() {
+    setForm({
+      event_round_id: '',
+      match_name: '',
+      team_a_country_id: '',
+      team_b_country_id: '',
+      team_a_name: '',
+      team_b_name: '',
+      start_time_utc: '',
+      notes: '',
+    });
+    setEditingMatch(null);
+  }
+
+  function startEdit(match) {
+    setEditingMatch(match);
+    setForm({
+      event_round_id: match.event_round_id?.toString() || '',
+      match_name: match.match_name || '',
+      team_a_country_id: match.team_a_country_id?.toString() || '',
+      team_b_country_id: match.team_b_country_id?.toString() || '',
+      team_a_name: match.team_a_name || '',
+      team_b_name: match.team_b_name || '',
+      start_time_utc: match.start_time_utc ? new Date(match.start_time_utc).toISOString().slice(0, 16) : '',
+      notes: match.notes || '',
+    });
+    setShowForm(true);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     try {
       const data = {
         ...form,
+        team_a_country_id: form.team_a_country_id || null,
+        team_b_country_id: form.team_b_country_id || null,
         start_time_utc: form.start_time_utc ? new Date(form.start_time_utc).toISOString() : null,
       };
-      await api.addMatch(data);
-      // Keep round selected for adding multiple matches
-      setForm({
-        event_round_id: form.event_round_id,
-        match_name: '',
-        team_a_country_id: '',
-        team_b_country_id: '',
-        team_a_name: '',
-        team_b_name: '',
-        start_time_utc: '',
-        notes: '',
-      });
+
+      if (editingMatch) {
+        await api.updateMatch(editingMatch.id, data);
+        showMessage('success', 'Match updated');
+        resetForm();
+        setShowForm(false);
+      } else {
+        await api.addMatch(data);
+        showMessage('success', 'Match added');
+        // Keep round selected for adding multiple matches
+        setForm({
+          event_round_id: form.event_round_id,
+          match_name: '',
+          team_a_country_id: '',
+          team_b_country_id: '',
+          team_a_name: '',
+          team_b_name: '',
+          start_time_utc: '',
+          notes: '',
+        });
+      }
       loadData();
-      showMessage('success', 'Match added');
     } catch (err) {
       showMessage('error', err.message);
     }
@@ -147,7 +188,15 @@ function AdminMatches() {
           <h2>Manage Matches</h2>
           <p className={styles.hint}>Add individual matches within rounds (e.g., USA vs Canada).</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            if (showForm && editingMatch) {
+              resetForm();
+            }
+            setShowForm(!showForm);
+          }}
+        >
           {showForm ? 'Hide Form' : '+ Add Match'}
         </button>
       </div>
@@ -155,6 +204,8 @@ function AdminMatches() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className={styles.form}>
+          <h3 className={styles.formTitle}>{editingMatch ? 'Edit Match' : 'Add New Match'}</h3>
+
           <div className="form-group">
             <label>Round *</label>
             <select
@@ -242,7 +293,16 @@ function AdminMatches() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary">Add Match</button>
+          <div className={styles.formActions}>
+            <button type="submit" className="btn btn-primary">
+              {editingMatch ? 'Save Changes' : 'Add Match'}
+            </button>
+            {editingMatch && (
+              <button type="button" className="btn" onClick={() => { resetForm(); setShowForm(false); }}>
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
       )}
 
@@ -276,6 +336,7 @@ function AdminMatches() {
               <div key={round.id} className={styles.roundGroup}>
                 <div className={styles.roundGroupHeader}>
                   <div>
+                    <span className={styles.roundGroupSport}>{round.sport_name}</span>
                     <span className={styles.roundGroupEvent}>
                       {formatEventName(round.medal_event_name, round.gender)}
                     </span>
@@ -339,13 +400,22 @@ function AdminMatches() {
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleDelete(m.id)}
-                          className={styles.matchDeleteBtn}
-                          title="Delete match"
-                        >
-                          Delete
-                        </button>
+                        <div className={styles.matchCardActions}>
+                          <button
+                            onClick={() => startEdit(m)}
+                            className={styles.matchEditBtn}
+                            title="Edit match"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(m.id)}
+                            className={styles.matchDeleteBtn}
+                            title="Delete match"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
