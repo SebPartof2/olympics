@@ -89,18 +89,21 @@ function Team() {
 
       setMatches(countryMatches);
 
-      // Get event IDs that have country matches
+      // Get round IDs that have matches involving the country
+      const roundIdsWithCountryMatches = new Set(countryMatches.map(m => m.event_round_id).filter(Boolean));
+
+      // Get event IDs that have country matches (for the Events tab)
       const eventIdsWithCountryMatches = new Set(countryMatches.map(m => m.medal_event_id).filter(Boolean));
 
       // Get medal event IDs the country participates in
       const participatingEventIds = new Set(participantsData.map(p => p.medal_event_id));
 
-      // Filter rounds for events the country participates in (without direct matches)
+      // Filter rounds for events the country participates in (only rounds without country matches)
       const countryRounds = scheduleData.filter(round => {
         // Only include rounds for events the country participates in
         if (!participatingEventIds.has(round.medal_event_id)) return false;
-        // Exclude events where the country already has direct matches
-        if (eventIdsWithCountryMatches.has(round.medal_event_id)) return false;
+        // Exclude rounds where the country already has direct matches
+        if (roundIdsWithCountryMatches.has(round.id)) return false;
         return true;
       });
 
