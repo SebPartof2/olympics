@@ -57,12 +57,30 @@ CREATE TABLE IF NOT EXISTS medal_events (
 CREATE TABLE IF NOT EXISTS event_rounds (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   medal_event_id INTEGER REFERENCES medal_events(id) ON DELETE CASCADE,
-  round_type TEXT NOT NULL CHECK(round_type IN ('heat', 'repechage', 'quarterfinal', 'semifinal', 'final', 'bronze_final', 'group_stage', 'knockout', 'qualification', 'preliminary')),
+  round_type TEXT NOT NULL CHECK(round_type IN ('heat', 'repechage', 'quarterfinal', 'semifinal', 'final', 'bronze_final', 'group_stage', 'knockout', 'qualification', 'preliminary', 'round_robin')),
   round_number INTEGER DEFAULT 1,
   round_name TEXT,
   start_time_utc DATETIME NOT NULL,
   end_time_utc DATETIME,
   venue TEXT,
+  status TEXT DEFAULT 'scheduled' CHECK(status IN ('scheduled', 'delayed', 'live', 'completed', 'cancelled')),
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Matches within rounds (for team sports, round robin, etc.)
+CREATE TABLE IF NOT EXISTS matches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_round_id INTEGER REFERENCES event_rounds(id) ON DELETE CASCADE,
+  match_name TEXT,
+  team_a_country_id INTEGER REFERENCES countries(id),
+  team_b_country_id INTEGER REFERENCES countries(id),
+  team_a_name TEXT,
+  team_b_name TEXT,
+  team_a_score TEXT,
+  team_b_score TEXT,
+  winner_country_id INTEGER REFERENCES countries(id),
+  start_time_utc DATETIME,
   status TEXT DEFAULT 'scheduled' CHECK(status IN ('scheduled', 'delayed', 'live', 'completed', 'cancelled')),
   notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -106,3 +124,6 @@ CREATE INDEX IF NOT EXISTS idx_event_rounds_status ON event_rounds(status);
 CREATE INDEX IF NOT EXISTS idx_medals_country ON medals(country_id);
 CREATE INDEX IF NOT EXISTS idx_medals_event ON medals(medal_event_id);
 CREATE INDEX IF NOT EXISTS idx_round_results_round ON round_results(event_round_id);
+CREATE INDEX IF NOT EXISTS idx_matches_round ON matches(event_round_id);
+CREATE INDEX IF NOT EXISTS idx_matches_team_a ON matches(team_a_country_id);
+CREATE INDEX IF NOT EXISTS idx_matches_team_b ON matches(team_b_country_id);

@@ -175,6 +175,35 @@ class ApiService {
     return this.request(`/round-results/${id}`, { method: 'DELETE' });
   }
 
+  // Matches (for team sports, round robin, etc.)
+  async getMatches(params = {}) {
+    const searchParams = new URLSearchParams(params).toString();
+    const endpoint = searchParams ? `/matches?${searchParams}` : '/matches';
+    return this.request(endpoint, { auth: false });
+  }
+
+  async getMatch(id) {
+    return this.request(`/matches/${id}`, { auth: false });
+  }
+
+  async addMatch(data) {
+    return this.request('/matches', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMatch(id, data) {
+    return this.request(`/matches/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMatch(id) {
+    return this.request(`/matches/${id}`, { method: 'DELETE' });
+  }
+
   // Medals
   async getMedalStandings(olympicsId) {
     const endpoint = olympicsId ? `/medals?olympics=${olympicsId}` : '/medals';

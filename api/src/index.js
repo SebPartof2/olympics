@@ -375,6 +375,86 @@ export default {
         }
       }
 
+      // ============ MATCHES ============
+      if (path === '/api/matches') {
+        if (method === 'GET') {
+          const round_id = url.searchParams.get('round');
+          const olympics_id = url.searchParams.get('olympics');
+          const status = url.searchParams.get('status');
+          let query = `
+            SELECT m.*,
+              ca.name as team_a_country_name, ca.code as team_a_country_code, ca.flag_url as team_a_flag_url,
+              cb.name as team_b_country_name, cb.code as team_b_country_code, cb.flag_url as team_b_flag_url,
+              cw.name as winner_country_name, cw.code as winner_country_code,
+              r.round_type, r.round_name, r.start_time_utc as round_start_time,
+              me.name as medal_event_name, me.gender, me.olympics_id,
+              s.name as sport_name
+            FROM matches m
+            LEFT JOIN countries ca ON m.team_a_country_id = ca.id
+            LEFT JOIN countries cb ON m.team_b_country_id = cb.id
+            LEFT JOIN countries cw ON m.winner_country_id = cw.id
+            LEFT JOIN event_rounds r ON m.event_round_id = r.id
+            LEFT JOIN medal_events me ON r.medal_event_id = me.id
+            LEFT JOIN sports s ON me.sport_id = s.id
+            WHERE 1=1
+          `;
+          const params = [];
+          if (round_id) { query += ' AND m.event_round_id = ?'; params.push(round_id); }
+          if (olympics_id) { query += ' AND me.olympics_id = ?'; params.push(olympics_id); }
+          if (status) { query += ' AND m.status = ?'; params.push(status); }
+          query += ' ORDER BY m.start_time_utc, m.id';
+          const stmt = env.DB.prepare(query);
+          const results = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+          return jsonResponse(results.results);
+        }
+        if (method === 'POST') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          const { event_round_id, match_name, team_a_country_id, team_b_country_id, team_a_name, team_b_name, team_a_score, team_b_score, winner_country_id, start_time_utc, status, notes } = await request.json();
+          if (!event_round_id) return errorResponse('event_round_id is required');
+          const result = await env.DB.prepare(
+            'INSERT INTO matches (event_round_id, match_name, team_a_country_id, team_b_country_id, team_a_name, team_b_name, team_a_score, team_b_score, winner_country_id, start_time_utc, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(event_round_id, match_name || null, team_a_country_id || null, team_b_country_id || null, team_a_name || null, team_b_name || null, team_a_score || null, team_b_score || null, winner_country_id || null, start_time_utc || null, status || 'scheduled', notes || null).run();
+          return jsonResponse({ success: true, message: 'Match added', id: result.meta.last_row_id }, 201);
+        }
+      }
+
+      if (path.match(/^\/api\/matches\/\d+$/)) {
+        const id = path.split('/').pop();
+        if (method === 'GET') {
+          const match = await env.DB.prepare(`
+            SELECT m.*,
+              ca.name as team_a_country_name, ca.code as team_a_country_code, ca.flag_url as team_a_flag_url,
+              cb.name as team_b_country_name, cb.code as team_b_country_code, cb.flag_url as team_b_flag_url,
+              cw.name as winner_country_name, cw.code as winner_country_code,
+              r.round_type, r.round_name,
+              me.name as medal_event_name, s.name as sport_name
+            FROM matches m
+            LEFT JOIN countries ca ON m.team_a_country_id = ca.id
+            LEFT JOIN countries cb ON m.team_b_country_id = cb.id
+            LEFT JOIN countries cw ON m.winner_country_id = cw.id
+            LEFT JOIN event_rounds r ON m.event_round_id = r.id
+            LEFT JOIN medal_events me ON r.medal_event_id = me.id
+            LEFT JOIN sports s ON me.sport_id = s.id
+            WHERE m.id = ?
+          `).bind(id).first();
+          if (!match) return errorResponse('Match not found', 404);
+          return jsonResponse(match);
+        }
+        if (method === 'PUT') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          const { match_name, team_a_country_id, team_b_country_id, team_a_name, team_b_name, team_a_score, team_b_score, winner_country_id, start_time_utc, status, notes } = await request.json();
+          await env.DB.prepare(
+            'UPDATE matches SET match_name = ?, team_a_country_id = ?, team_b_country_id = ?, team_a_name = ?, team_b_name = ?, team_a_score = ?, team_b_score = ?, winner_country_id = ?, start_time_utc = ?, status = ?, notes = ? WHERE id = ?'
+          ).bind(match_name || null, team_a_country_id || null, team_b_country_id || null, team_a_name || null, team_b_name || null, team_a_score || null, team_b_score || null, winner_country_id || null, start_time_utc || null, status || 'scheduled', notes || null, id).run();
+          return jsonResponse({ success: true, message: 'Match updated' });
+        }
+        if (method === 'DELETE') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          await env.DB.prepare('DELETE FROM matches WHERE id = ?').bind(id).run();
+          return jsonResponse({ success: true, message: 'Match deleted' });
+        }
+      }
+
       // ============ MEDALS ============
       if (path === '/api/medals') {
         if (method === 'GET') {

@@ -288,6 +288,70 @@
   font-style: italic;
 }
 
+.matchItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.matchTeams {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.matchTeam {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vs {
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0 0.5rem;
+}
+
+.scoreInput {
+  width: 50px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: var(--bg-secondary);
+}
+
+.scoreInput:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+}
+
+.matchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 150px;
+}
+
+.matchRound {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.matchName {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--olympic-blue);
+}
+
 .hint {
   text-align: center;
   padding: 1rem;
