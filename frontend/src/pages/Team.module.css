@@ -380,6 +380,11 @@
   margin-bottom: 0.5rem;
 }
 
+.eventWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
 .eventCard {
   display: flex;
   align-items: center;
@@ -398,6 +403,19 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+.eventCard.expandable {
+  cursor: pointer;
+}
+
+.eventCard.expandable:hover {
+  background-color: var(--bg-secondary);
+}
+
+.eventCard.expanded {
+  border-radius: 8px 8px 0 0;
+  transform: none;
+}
+
 .eventSport {
   font-size: 0.85rem;
   color: var(--olympic-blue);
@@ -408,6 +426,143 @@
 .eventTitle {
   font-weight: 500;
   color: var(--text-primary);
+  flex: 1;
+}
+
+.eventMatchCount {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+}
+
+.expandIcon {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.iconExpanded {
+  transform: rotate(180deg);
+}
+
+.eventLink {
+  font-size: 0.85rem;
+  color: var(--olympic-blue);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.eventLink:hover {
+  text-decoration: underline;
+}
+
+/* Expanded Event Matches Panel */
+.eventMatchesPanel {
+  background-color: var(--bg-secondary);
+  border-radius: 0 0 8px 8px;
+  padding: 1rem;
+  margin-left: 4px;
+  border-left: 4px solid var(--olympic-blue);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.eventMatchCard {
+  position: relative;
+  background-color: var(--bg-primary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  border-left: 3px solid var(--border-color);
+}
+
+.eventMatchCard.highlighted {
+  background-color: rgba(0, 133, 199, 0.05);
+  border-left-color: var(--olympic-blue);
+}
+
+.eventMatchCard.win {
+  border-left-color: var(--olympic-green);
+}
+
+.eventMatchCard.loss {
+  border-left-color: var(--olympic-red);
+}
+
+.eventMatchCard.draw {
+  border-left-color: var(--olympic-yellow);
+}
+
+.eventMatchHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.eventMatchTeams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.eventTeam {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.eventTeam:first-child {
+  justify-content: flex-end;
+}
+
+.eventTeam:last-child {
+  justify-content: flex-start;
+}
+
+.eventTeam.winner {
+  font-weight: 600;
+}
+
+.ourTeam {
+  font-weight: 600;
+  color: var(--olympic-blue);
+}
+
+.eventScore {
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.eventVs {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0 0.25rem;
+}
+
+.viewFullEvent {
+  display: block;
+  text-align: center;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  color: var(--olympic-blue);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-top: 1px solid var(--border-color);
+}
+
+.viewFullEvent:hover {
+  text-decoration: underline;
 }
 
 /* Responsive */
@@ -449,6 +604,33 @@
   .tab {
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
+  }
+
+  .eventCard {
+    flex-wrap: wrap;
+  }
+
+  .eventSport {
+    min-width: auto;
+  }
+
+  .eventTitle {
+    width: 100%;
+    order: 3;
+  }
+
+  .eventMatchTeams {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .eventTeam {
+    width: 100%;
+    justify-content: space-between !important;
+  }
+
+  .eventVs {
+    display: none;
   }
 }
 
