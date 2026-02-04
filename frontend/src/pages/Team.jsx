@@ -193,11 +193,12 @@ function Team() {
 
   function getMatchResult(match, countryId) {
     if (match.status !== 'completed') return null;
-    const winnerId = match.winner_country_id ? Number(match.winner_country_id) : null;
+    // No winner set means no result to show yet
+    if (!match.winner_country_id) return null;
+    const winnerId = Number(match.winner_country_id);
     const ourId = Number(countryId);
     if (winnerId === ourId) return 'win';
-    if (winnerId && winnerId !== ourId) return 'loss';
-    return 'draw';
+    return 'loss';
   }
 
   function toggleEvent(eventId) {
