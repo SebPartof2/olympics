@@ -105,7 +105,11 @@ function MedalTable({ data, limit = null, showSearch = false }) {
                 </td>
                 <td className={styles.countryCol}>
                   <div className={styles.countryInfo}>
-                    <span className={styles.countryCode}>{country.code}</span>
+                    {country.flag_url ? (
+                      <img src={country.flag_url} alt={country.code} className={styles.flag} />
+                    ) : (
+                      <span className={styles.countryCode}>{country.code}</span>
+                    )}
                     <span className={styles.countryName}>{country.name}</span>
                   </div>
                 </td>

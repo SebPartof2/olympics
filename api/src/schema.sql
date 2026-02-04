@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS olympics (
   type TEXT NOT NULL CHECK(type IN ('summer', 'winter', 'youth', 'paralympics')),
   city TEXT NOT NULL,
   country TEXT NOT NULL,
+  logo_url TEXT,
   start_date DATE,
   end_date DATE,
   is_active INTEGER DEFAULT 0,
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS countries (
 CREATE TABLE IF NOT EXISTS sports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
-  icon TEXT,
+  icon_url TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

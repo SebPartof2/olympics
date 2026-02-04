@@ -168,6 +168,28 @@
   gap: 0.25rem;
 }
 
+.logoPreview {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+}
+
+.flagPreview {
+  width: 32px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.iconPreview {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 .code {
   display: inline-flex;
   align-items: center;

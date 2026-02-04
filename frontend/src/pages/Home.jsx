@@ -73,6 +73,9 @@ function Home() {
   return (
     <div className={`container ${styles.home}`}>
       <section className={styles.hero}>
+        {selectedOlympics?.logo_url && (
+          <img src={selectedOlympics.logo_url} alt={olympicsName} className={styles.heroLogo} />
+        )}
         <h1 className={styles.heroTitle}>{olympicsName}</h1>
         {olympicsLocation && (
           <p className={styles.heroSubtitle}>{olympicsLocation}</p>

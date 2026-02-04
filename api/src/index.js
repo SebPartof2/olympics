@@ -67,13 +67,13 @@ export default {
         }
         if (method === 'POST') {
           if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
-          const { name, year, type, city, country, start_date, end_date } = await request.json();
+          const { name, year, type, city, country, logo_url, start_date, end_date } = await request.json();
           if (!name || !year || !type || !city || !country) {
             return errorResponse('name, year, type, city, and country are required');
           }
           const result = await env.DB.prepare(
-            'INSERT INTO olympics (name, year, type, city, country, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
-          ).bind(name, year, type, city, country, start_date || null, end_date || null).run();
+            'INSERT INTO olympics (name, year, type, city, country, logo_url, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(name, year, type, city, country, logo_url || null, start_date || null, end_date || null).run();
           return jsonResponse({ success: true, message: 'Olympics created', id: result.meta.last_row_id }, 201);
         }
       }
@@ -87,10 +87,10 @@ export default {
         }
         if (method === 'PUT') {
           if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
-          const { name, year, type, city, country, start_date, end_date } = await request.json();
+          const { name, year, type, city, country, logo_url, start_date, end_date } = await request.json();
           await env.DB.prepare(
-            'UPDATE olympics SET name = ?, year = ?, type = ?, city = ?, country = ?, start_date = ?, end_date = ? WHERE id = ?'
-          ).bind(name, year, type, city, country, start_date || null, end_date || null, id).run();
+            'UPDATE olympics SET name = ?, year = ?, type = ?, city = ?, country = ?, logo_url = ?, start_date = ?, end_date = ? WHERE id = ?'
+          ).bind(name, year, type, city, country, logo_url || null, start_date || null, end_date || null, id).run();
           return jsonResponse({ success: true, message: 'Olympics updated' });
         }
         if (method === 'DELETE') {
@@ -131,6 +131,14 @@ export default {
 
       if (path.match(/^\/api\/countries\/\d+$/)) {
         const id = path.split('/').pop();
+        if (method === 'PUT') {
+          if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+          const { name, code, flag_url } = await request.json();
+          await env.DB.prepare('UPDATE countries SET name = ?, code = ?, flag_url = ? WHERE id = ?')
+            .bind(name, code.toUpperCase(), flag_url || null, id)
+            .run();
+          return jsonResponse({ success: true, message: 'Country updated' });
+        }
         if (method === 'DELETE') {
           if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
           await env.DB.prepare('DELETE FROM countries WHERE id = ?').bind(id).run();
@@ -146,13 +154,23 @@ export default {
         }
         if (method === 'POST') {
           if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
-          const { name, icon } = await request.json();
+          const { name, icon_url } = await request.json();
           if (!name) return errorResponse('Name is required');
-          await env.DB.prepare('INSERT INTO sports (name, icon) VALUES (?, ?)')
-            .bind(name, icon || null)
+          await env.DB.prepare('INSERT INTO sports (name, icon_url) VALUES (?, ?)')
+            .bind(name, icon_url || null)
             .run();
           return jsonResponse({ success: true, message: 'Sport added' }, 201);
         }
+      }
+
+      if (path.match(/^\/api\/sports\/\d+$/) && method === 'PUT') {
+        const id = path.split('/').pop();
+        if (!checkAuth(request, env)) return errorResponse('Unauthorized', 401);
+        const { name, icon_url } = await request.json();
+        await env.DB.prepare('UPDATE sports SET name = ?, icon_url = ? WHERE id = ?')
+          .bind(name, icon_url || null, id)
+          .run();
+        return jsonResponse({ success: true, message: 'Sport updated' });
       }
 
       if (path.match(/^\/api\/sports\/\d+$/)) {
@@ -171,7 +189,7 @@ export default {
           const sport = url.searchParams.get('sport');
           const gender = url.searchParams.get('gender');
           let query = `
-            SELECT me.*, s.name as sport_name, o.name as olympics_name,
+            SELECT me.*, s.name as sport_name, s.icon_url as sport_icon_url, o.name as olympics_name,
               (SELECT COUNT(*) FROM event_rounds WHERE medal_event_id = me.id) as round_count,
               (SELECT COUNT(*) FROM medals WHERE medal_event_id = me.id) as medal_count
             FROM medal_events me
@@ -248,7 +266,8 @@ export default {
           const status = url.searchParams.get('status');
           const upcoming = url.searchParams.get('upcoming');
           let query = `
-            SELECT r.*, me.name as medal_event_name, me.olympics_id, s.name as sport_name
+            SELECT r.*, me.name as medal_event_name, me.gender, me.olympics_id,
+              s.name as sport_name, s.icon_url as sport_icon_url
             FROM event_rounds r
             LEFT JOIN medal_events me ON r.medal_event_id = me.id
             LEFT JOIN sports s ON me.sport_id = s.id
@@ -394,7 +413,8 @@ export default {
       if (path === '/api/medals/all') {
         const olympics_id = url.searchParams.get('olympics');
         let query = `
-          SELECT m.*, c.name as country_name, c.code as country_code, me.name as event_name, me.olympics_id, s.name as sport_name
+          SELECT m.*, c.name as country_name, c.code as country_code, c.flag_url as country_flag_url,
+            me.name as event_name, me.olympics_id, s.name as sport_name, s.icon_url as sport_icon_url
           FROM medals m
           LEFT JOIN countries c ON m.country_id = c.id
           LEFT JOIN medal_events me ON m.medal_event_id = me.id
@@ -429,7 +449,7 @@ export default {
             r.id, r.round_type, r.round_number, r.round_name,
             r.start_time_utc, r.end_time_utc, r.venue as round_venue, r.status, r.notes,
             me.id as medal_event_id, me.name as medal_event_name, me.gender, me.venue as event_venue, me.olympics_id,
-            s.id as sport_id, s.name as sport_name
+            s.id as sport_id, s.name as sport_name, s.icon_url as sport_icon_url
           FROM event_rounds r
           LEFT JOIN medal_events me ON r.medal_event_id = me.id
           LEFT JOIN sports s ON me.sport_id = s.id

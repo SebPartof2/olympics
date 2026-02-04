@@ -44,10 +44,10 @@ function Admin() {
     default_timezone: '',
   });
   const [olympicsForm, setOlympicsForm] = useState({
-    name: '', year: new Date().getFullYear(), type: 'summer', city: '', country: '', start_date: '', end_date: '',
+    name: '', year: new Date().getFullYear(), type: 'summer', city: '', country: '', logo_url: '', start_date: '', end_date: '',
   });
-  const [countryForm, setCountryForm] = useState({ name: '', code: '' });
-  const [sportForm, setSportForm] = useState({ name: '' });
+  const [countryForm, setCountryForm] = useState({ name: '', code: '', flag_url: '' });
+  const [sportForm, setSportForm] = useState({ name: '', icon_url: '' });
   const [medalEventForm, setMedalEventForm] = useState({
     olympics_id: '', sport_id: '', name: '', gender: 'mixed', event_type: 'individual', venue: '', scheduled_date: '',
   });
@@ -124,7 +124,7 @@ function Admin() {
     e.preventDefault();
     try {
       await api.addOlympics(olympicsForm);
-      setOlympicsForm({ name: '', year: new Date().getFullYear(), type: 'summer', city: '', country: '', start_date: '', end_date: '' });
+      setOlympicsForm({ name: '', year: new Date().getFullYear(), type: 'summer', city: '', country: '', logo_url: '', start_date: '', end_date: '' });
       refreshOlympics();
       showMessage('success', 'Olympics added');
     } catch (err) {
@@ -158,7 +158,7 @@ function Admin() {
     e.preventDefault();
     try {
       await api.addCountry(countryForm);
-      setCountryForm({ name: '', code: '' });
+      setCountryForm({ name: '', code: '', flag_url: '' });
       loadAllData();
       showMessage('success', 'Country added');
     } catch (err) {
@@ -182,7 +182,7 @@ function Admin() {
     e.preventDefault();
     try {
       await api.addSport(sportForm);
-      setSportForm({ name: '' });
+      setSportForm({ name: '', icon_url: '' });
       loadAllData();
       showMessage('success', 'Sport added');
     } catch (err) {
@@ -358,6 +358,10 @@ function Admin() {
                   <input type="text" value={olympicsForm.country} onChange={(e) => setOlympicsForm({ ...olympicsForm, country: e.target.value })} placeholder="e.g., France" required />
                 </div>
                 <div className="form-group">
+                  <label>Logo URL</label>
+                  <input type="url" value={olympicsForm.logo_url} onChange={(e) => setOlympicsForm({ ...olympicsForm, logo_url: e.target.value })} placeholder="https://..." />
+                </div>
+                <div className="form-group">
                   <label>Start Date</label>
                   <input type="date" value={olympicsForm.start_date} onChange={(e) => setOlympicsForm({ ...olympicsForm, start_date: e.target.value })} />
                 </div>
@@ -371,6 +375,7 @@ function Admin() {
             <div className={styles.list}>
               {olympicsList.map((o) => (
                 <div key={o.id} className={`${styles.listItem} ${o.is_active ? styles.activeItem : ''}`}>
+                  {o.logo_url && <img src={o.logo_url} alt={o.name} className={styles.logoPreview} />}
                   <div className={styles.olympicsInfo}>
                     <span className={styles.name}>{o.name}</span>
                     <span className={styles.meta}>{o.city}, {o.country} · {OLYMPICS_TYPES.find(t => t.value === o.type)?.label}</span>
@@ -422,7 +427,7 @@ function Admin() {
           <div className={styles.section}>
             <h2>Manage Countries</h2>
             <form onSubmit={handleAddCountry} className={styles.form}>
-              <div className={styles.formRow}>
+              <div className={styles.formGrid}>
                 <div className="form-group">
                   <label>Country Name</label>
                   <input type="text" value={countryForm.name} onChange={(e) => setCountryForm({ ...countryForm, name: e.target.value })} placeholder="e.g., United States" required />
@@ -431,12 +436,17 @@ function Admin() {
                   <label>Code (3 letters)</label>
                   <input type="text" value={countryForm.code} onChange={(e) => setCountryForm({ ...countryForm, code: e.target.value.toUpperCase() })} placeholder="e.g., USA" maxLength={3} required />
                 </div>
-                <button type="submit" className="btn btn-primary">Add Country</button>
+                <div className="form-group">
+                  <label>Flag URL</label>
+                  <input type="url" value={countryForm.flag_url} onChange={(e) => setCountryForm({ ...countryForm, flag_url: e.target.value })} placeholder="https://..." />
+                </div>
               </div>
+              <button type="submit" className="btn btn-primary">Add Country</button>
             </form>
             <div className={styles.list}>
               {countries.map((c) => (
                 <div key={c.id} className={styles.listItem}>
+                  {c.flag_url && <img src={c.flag_url} alt={c.code} className={styles.flagPreview} />}
                   <span className={styles.code}>{c.code}</span>
                   <span className={styles.name}>{c.name}</span>
                   <button onClick={() => handleDeleteCountry(c.id)} className="btn btn-danger">Delete</button>
@@ -452,17 +462,22 @@ function Admin() {
           <div className={styles.section}>
             <h2>Manage Sports</h2>
             <form onSubmit={handleAddSport} className={styles.form}>
-              <div className={styles.formRow}>
+              <div className={styles.formGrid}>
                 <div className="form-group">
                   <label>Sport Name</label>
-                  <input type="text" value={sportForm.name} onChange={(e) => setSportForm({ name: e.target.value })} placeholder="e.g., Swimming" required />
+                  <input type="text" value={sportForm.name} onChange={(e) => setSportForm({ ...sportForm, name: e.target.value })} placeholder="e.g., Swimming" required />
                 </div>
-                <button type="submit" className="btn btn-primary">Add Sport</button>
+                <div className="form-group">
+                  <label>Icon URL</label>
+                  <input type="url" value={sportForm.icon_url} onChange={(e) => setSportForm({ ...sportForm, icon_url: e.target.value })} placeholder="https://..." />
+                </div>
               </div>
+              <button type="submit" className="btn btn-primary">Add Sport</button>
             </form>
             <div className={styles.list}>
               {sports.map((s) => (
                 <div key={s.id} className={styles.listItem}>
+                  {s.icon_url && <img src={s.icon_url} alt={s.name} className={styles.iconPreview} />}
                   <span className={styles.name}>{s.name}</span>
                   <button onClick={() => handleDeleteSport(s.id)} className="btn btn-danger">Delete</button>
                 </div>
