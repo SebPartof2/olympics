@@ -7,14 +7,19 @@ import styles from './Live.module.css';
 function Live() {
   const { selectedOlympics, selectedOlympicsId, isLoading: olympicsLoading } = useOlympics();
   const [liveRounds, setLiveRounds] = useState([]);
+  const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!selectedOlympicsId) return;
     try {
-      const rounds = await api.getLiveRounds(selectedOlympicsId);
+      const [rounds, matchesData] = await Promise.all([
+        api.getLiveRounds(selectedOlympicsId),
+        api.getMatches({ olympics_id: selectedOlympicsId, status: 'live' }),
+      ]);
       setLiveRounds(rounds);
+      setMatches(matchesData);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -48,7 +53,7 @@ function Live() {
         <p>{selectedOlympics?.name || 'Olympics'} - Real-time updates from ongoing events</p>
       </header>
 
-      <LiveResults rounds={liveRounds} onRefresh={loadData} />
+      <LiveResults rounds={liveRounds} matches={matches} onRefresh={loadData} />
     </div>
   );
 }

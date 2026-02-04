@@ -217,3 +217,94 @@
 .emptyHint {
   font-size: 0.9rem;
 }
+
+/* Matches within live events */
+.matchesList {
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.matchCard {
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--olympic-red);
+}
+
+.matchCard.completed {
+  border-left-color: var(--olympic-green);
+  opacity: 0.9;
+}
+
+.matchTeams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.team:first-child {
+  justify-content: flex-end;
+}
+
+.team:last-child {
+  justify-content: flex-start;
+}
+
+.team.winner .teamName {
+  font-weight: 700;
+  color: var(--olympic-green);
+}
+
+.teamName {
+  font-weight: 500;
+}
+
+.flag {
+  width: 24px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.matchScore {
+  font-size: 1.25rem;
+  font-weight: 700;
+  min-width: 30px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.vs {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0 0.5rem;
+}
+
+.matchName {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .matchTeams {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .team {
+    justify-content: center !important;
+  }
+}
