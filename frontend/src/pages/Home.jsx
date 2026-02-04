@@ -47,9 +47,10 @@ function Home() {
   }
 
   function formatEventName(name, gender) {
-    if (!gender || gender === 'mixed') return name;
-    const prefix = gender === 'men' ? "Men's" : "Women's";
-    return `${prefix} ${name}`;
+    if (!gender) return name;
+    const prefixes = { men: "Men's", women: "Women's", mixed: "Mixed" };
+    const prefix = prefixes[gender];
+    return prefix ? `${prefix} ${name}` : name;
   }
 
   if (loading || olympicsLoading) {
