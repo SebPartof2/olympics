@@ -77,7 +77,7 @@ function Team() {
 
       // Filter matches involving this country
       const countryMatches = matchesData.filter(
-        m => m.team_a_country_id === foundCountry.id || m.team_b_country_id === foundCountry.id
+        m => Number(m.team_a_country_id) === Number(foundCountry.id) || Number(m.team_b_country_id) === Number(foundCountry.id)
       );
 
       // Sort by start time
@@ -123,7 +123,7 @@ function Team() {
       setParticipatingEvents(eventsWithoutCountryMatches);
 
       // Find medal count for this country
-      const countryMedals = medalsData.find(m => m.country_id === foundCountry.id);
+      const countryMedals = medalsData.find(m => Number(m.country_id) === Number(foundCountry.id));
       if (countryMedals) {
         setMedals({
           gold: countryMedals.gold || 0,
@@ -364,8 +364,8 @@ function Team() {
                   {isExpanded && hasMatches && (
                     <div className={styles.eventMatchesPanel}>
                       {eventMatches.map(match => {
-                        const involvesCountry = match.team_a_country_id === country.id || match.team_b_country_id === country.id;
-                        const isTeamA = match.team_a_country_id === country.id;
+                        const involvesCountry = Number(match.team_a_country_id) === Number(country.id) || Number(match.team_b_country_id) === Number(country.id);
+                        const isTeamA = Number(match.team_a_country_id) === Number(country.id);
                         const result = involvesCountry ? getMatchResult(match, country.id) : null;
 
                         return (
@@ -469,7 +469,7 @@ function Team() {
 
                     // Render match
                     const match = item;
-                    const isTeamA = match.team_a_country_id === country.id;
+                    const isTeamA = Number(match.team_a_country_id) === Number(country.id);
                     const result = getMatchResult(match, country.id);
 
                     return (
