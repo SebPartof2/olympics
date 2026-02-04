@@ -388,6 +388,319 @@
   color: var(--olympic-blue);
 }
 
+/* Section header with button */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sectionHeader h2 {
+  margin-bottom: 0.25rem;
+}
+
+/* Form rows */
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.teamsFormRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+}
+
+.teamForm {
+  flex: 1;
+}
+
+.teamForm label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.teamInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vsLabel {
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 0 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Filter bar */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+}
+
+.filterSelect {
+  flex: 1;
+  max-width: 400px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-secondary);
+}
+
+.matchCount {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Round groups */
+.roundGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.roundGroup {
+  background-color: var(--bg-primary);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.roundGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background-color: var(--olympic-blue);
+  color: white;
+}
+
+.roundGroupEvent {
+  font-weight: 600;
+  display: block;
+}
+
+.roundGroupRound {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.roundGroupCount {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Matches grid */
+.matchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.matchCard {
+  position: relative;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid var(--border-color);
+}
+
+.matchCard.matchScheduled {
+  border-left-color: var(--text-secondary);
+}
+
+.matchCard.matchLive {
+  border-left-color: var(--olympic-red);
+  background-color: rgba(239, 65, 53, 0.05);
+}
+
+.matchCard.matchCompleted {
+  border-left-color: var(--olympic-green);
+}
+
+.matchCard.matchCancelled {
+  border-left-color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.matchCardTop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.matchLabel {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.matchNotes {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.statusBadgeSelect {
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.statusBadgeSelect.statusScheduled {
+  background-color: #e0e0e0;
+  color: #666;
+}
+
+.statusBadgeSelect.statusLive {
+  background-color: var(--olympic-red);
+  color: white;
+}
+
+.statusBadgeSelect.statusCompleted {
+  background-color: var(--olympic-green);
+  color: white;
+}
+
+.statusBadgeSelect.statusCancelled {
+  background-color: #999;
+  color: white;
+}
+
+.matchCardTeams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.matchCardTeam {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 70px;
+}
+
+.matchCardTeam:first-child {
+  justify-content: flex-end;
+}
+
+.matchCardTeam:last-child {
+  justify-content: flex-start;
+}
+
+.flagSmall {
+  width: 24px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.teamCode {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.scoreBox {
+  width: 40px;
+  height: 36px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-primary);
+}
+
+.scoreBox:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+}
+
+.scoreDivider {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.matchDeleteBtn {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background-color: transparent;
+  border: 1px solid var(--olympic-red);
+  color: var(--olympic-red);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.matchDeleteBtn:hover {
+  background-color: var(--olympic-red);
+  color: white;
+}
+
+.emptyRound {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .teamsFormRow {
+    flex-direction: column;
+  }
+
+  .vsLabel {
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+
+  .matchesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sectionHeader button {
+    align-self: flex-start;
+  }
+}
+
 @media (max-width: 600px) {
   .eventItem {
     flex-direction: column;
@@ -406,5 +719,18 @@
 
   .matchTeams {
     justify-content: center;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterSelect {
+    max-width: none;
+  }
+
+  .matchCardTeams {
+    flex-wrap: wrap;
   }
 }

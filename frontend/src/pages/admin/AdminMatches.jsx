@@ -4,19 +4,19 @@ import { useOlympics } from '../../context/OlympicsContext';
 import { useAdminMessage } from './useAdminMessage';
 import styles from './Admin.module.css';
 
-const ROUND_TYPES = [
-  { value: 'heat', label: 'Heat' },
-  { value: 'repechage', label: 'Repechage' },
-  { value: 'quarterfinal', label: 'Quarterfinal' },
-  { value: 'semifinal', label: 'Semifinal' },
-  { value: 'final', label: 'Final' },
-  { value: 'bronze_final', label: 'Bronze Final' },
-  { value: 'group_stage', label: 'Group Stage' },
-  { value: 'round_robin', label: 'Round Robin' },
-  { value: 'knockout', label: 'Knockout' },
-  { value: 'qualification', label: 'Qualification' },
-  { value: 'preliminary', label: 'Preliminary' },
-];
+const ROUND_TYPES = {
+  heat: 'Heat',
+  repechage: 'Repechage',
+  quarterfinal: 'Quarterfinal',
+  semifinal: 'Semifinal',
+  final: 'Final',
+  bronze_final: 'Bronze Final',
+  group_stage: 'Group Stage',
+  round_robin: 'Round Robin',
+  knockout: 'Knockout',
+  qualification: 'Qualification',
+  preliminary: 'Preliminary',
+};
 
 function formatEventName(name, gender) {
   if (!gender) return name;
@@ -25,12 +25,26 @@ function formatEventName(name, gender) {
   return prefix ? `${prefix} ${name}` : name;
 }
 
+function getRoundLabel(round) {
+  if (round.round_name) return round.round_name;
+  const typeName = ROUND_TYPES[round.round_type] || round.round_type;
+  const numberSuffix = round.round_number > 1 ? ` ${round.round_number}` : '';
+  return `${typeName}${numberSuffix}`;
+}
+
+function getFullRoundLabel(round) {
+  const eventName = formatEventName(round.medal_event_name, round.gender);
+  return `${eventName} — ${getRoundLabel(round)}`;
+}
+
 function AdminMatches() {
   const { selectedOlympicsId } = useOlympics();
   const { showMessage, MessageDisplay } = useAdminMessage();
   const [countries, setCountries] = useState([]);
   const [rounds, setRounds] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [filterRoundId, setFilterRoundId] = useState('');
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     event_round_id: '',
     match_name: '',
@@ -38,9 +52,6 @@ function AdminMatches() {
     team_b_country_id: '',
     team_a_name: '',
     team_b_name: '',
-    team_a_score: '',
-    team_b_score: '',
-    winner_country_id: '',
     start_time_utc: '',
     notes: '',
   });
@@ -72,16 +83,14 @@ function AdminMatches() {
         start_time_utc: form.start_time_utc ? new Date(form.start_time_utc).toISOString() : null,
       };
       await api.addMatch(data);
+      // Keep round selected for adding multiple matches
       setForm({
-        event_round_id: '',
+        event_round_id: form.event_round_id,
         match_name: '',
         team_a_country_id: '',
         team_b_country_id: '',
         team_a_name: '',
         team_b_name: '',
-        team_a_score: '',
-        team_b_score: '',
-        winner_country_id: '',
         start_time_utc: '',
         notes: '',
       });
@@ -92,12 +101,11 @@ function AdminMatches() {
     }
   }
 
-  async function handleUpdateScore(id, team_a_score, team_b_score, winner_country_id, status) {
+  async function handleUpdate(id, updates) {
     try {
       const match = matches.find((m) => m.id === id);
-      await api.updateMatch(id, { ...match, team_a_score, team_b_score, winner_country_id, status });
+      await api.updateMatch(id, { ...match, ...updates });
       loadData();
-      showMessage('success', 'Match updated');
     } catch (err) {
       showMessage('error', err.message);
     }
@@ -114,16 +122,41 @@ function AdminMatches() {
     }
   }
 
+  // Group matches by round
+  const matchesByRound = matches.reduce((acc, match) => {
+    const roundId = match.event_round_id;
+    if (!acc[roundId]) acc[roundId] = [];
+    acc[roundId].push(match);
+    return acc;
+  }, {});
+
+  // Rounds with matches or matching filter
+  const roundsWithMatches = rounds.filter(r =>
+    matchesByRound[r.id]?.length > 0 || r.id === parseInt(filterRoundId)
+  );
+
+  // Apply filter
+  const displayRounds = filterRoundId
+    ? rounds.filter(r => r.id === parseInt(filterRoundId))
+    : roundsWithMatches;
+
   return (
     <div className={styles.section}>
-      <h2>Manage Matches</h2>
-      <p className={styles.hint}>Add individual matches within rounds (e.g., USA vs Canada in curling round robin).</p>
+      <div className={styles.sectionHeader}>
+        <div>
+          <h2>Manage Matches</h2>
+          <p className={styles.hint}>Add individual matches within rounds (e.g., USA vs Canada).</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Hide Form' : '+ Add Match'}
+        </button>
+      </div>
       <MessageDisplay />
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGrid}>
+      {showForm && (
+        <form onSubmit={handleSubmit} className={styles.form}>
           <div className="form-group">
-            <label>Round</label>
+            <label>Round *</label>
             <select
               value={form.event_round_id}
               onChange={(e) => setForm({ ...form, event_round_id: e.target.value })}
@@ -131,138 +164,203 @@ function AdminMatches() {
             >
               <option value="">Select Round</option>
               {rounds.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {formatEventName(r.medal_event_name, r.gender)} - {ROUND_TYPES.find((t) => t.value === r.round_type)?.label || r.round_type}
-                  {r.round_number > 1 ? ` ${r.round_number}` : ''}
-                </option>
+                <option key={r.id} value={r.id}>{getFullRoundLabel(r)}</option>
               ))}
             </select>
           </div>
-          <div className="form-group">
-            <label>Match Name (optional)</label>
-            <input
-              type="text"
-              value={form.match_name}
-              onChange={(e) => setForm({ ...form, match_name: e.target.value })}
-              placeholder="e.g., Match 1, Pool A"
-            />
-          </div>
-          <div className="form-group">
-            <label>Team A Country</label>
-            <select
-              value={form.team_a_country_id}
-              onChange={(e) => setForm({ ...form, team_a_country_id: e.target.value })}
-            >
-              <option value="">Select Country</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Team A Name (optional)</label>
-            <input
-              type="text"
-              value={form.team_a_name}
-              onChange={(e) => setForm({ ...form, team_a_name: e.target.value })}
-              placeholder="e.g., Team Smith"
-            />
-          </div>
-          <div className="form-group">
-            <label>Team B Country</label>
-            <select
-              value={form.team_b_country_id}
-              onChange={(e) => setForm({ ...form, team_b_country_id: e.target.value })}
-            >
-              <option value="">Select Country</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Team B Name (optional)</label>
-            <input
-              type="text"
-              value={form.team_b_name}
-              onChange={(e) => setForm({ ...form, team_b_name: e.target.value })}
-              placeholder="e.g., Team Jones"
-            />
-          </div>
-          <div className="form-group">
-            <label>Start Time (optional)</label>
-            <input
-              type="datetime-local"
-              value={form.start_time_utc}
-              onChange={(e) => setForm({ ...form, start_time_utc: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Notes (optional)</label>
-            <input
-              type="text"
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="e.g., Sheet A"
-            />
-          </div>
-        </div>
-        <button type="submit" className="btn btn-primary">Add Match</button>
-      </form>
 
-      <div className={styles.list}>
-        {matches.map((m) => (
-          <div key={m.id} className={styles.matchItem}>
-            <div className={styles.matchTeams}>
-              <div className={styles.matchTeam}>
-                {m.team_a_flag_url && (
-                  <img src={m.team_a_flag_url} alt={m.team_a_country_code} className={styles.flagPreview} />
-                )}
-                <span>{m.team_a_country_code || m.team_a_name || 'TBD'}</span>
-                <input
-                  type="text"
-                  value={m.team_a_score || ''}
-                  onChange={(e) => handleUpdateScore(m.id, e.target.value, m.team_b_score, m.winner_country_id, m.status)}
-                  className={styles.scoreInput}
-                  placeholder="0"
-                />
-              </div>
-              <span className={styles.vs}>vs</span>
-              <div className={styles.matchTeam}>
-                <input
-                  type="text"
-                  value={m.team_b_score || ''}
-                  onChange={(e) => handleUpdateScore(m.id, m.team_a_score, e.target.value, m.winner_country_id, m.status)}
-                  className={styles.scoreInput}
-                  placeholder="0"
-                />
-                <span>{m.team_b_country_code || m.team_b_name || 'TBD'}</span>
-                {m.team_b_flag_url && (
-                  <img src={m.team_b_flag_url} alt={m.team_b_country_code} className={styles.flagPreview} />
-                )}
-              </div>
+          <div className={styles.formRow}>
+            <div className="form-group">
+              <label>Match Label</label>
+              <input
+                type="text"
+                value={form.match_name}
+                onChange={(e) => setForm({ ...form, match_name: e.target.value })}
+                placeholder="e.g., Game 1, Pool A"
+              />
             </div>
-            <div className={styles.matchInfo}>
-              <span className={styles.matchRound}>{formatEventName(m.medal_event_name, m.gender)} - {m.round_type}</span>
-              {m.match_name && <span className={styles.matchName}>{m.match_name}</span>}
+            <div className="form-group">
+              <label>Start Time</label>
+              <input
+                type="datetime-local"
+                value={form.start_time_utc}
+                onChange={(e) => setForm({ ...form, start_time_utc: e.target.value })}
+              />
             </div>
-            <div className={styles.eventActions}>
-              <select
-                value={m.status}
-                onChange={(e) => handleUpdateScore(m.id, m.team_a_score, m.team_b_score, m.winner_country_id, e.target.value)}
-                className={styles.statusSelect}
-              >
-                <option value="scheduled">Scheduled</option>
-                <option value="live">Live</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <button onClick={() => handleDelete(m.id)} className="btn btn-danger">Delete</button>
+            <div className="form-group">
+              <label>Notes</label>
+              <input
+                type="text"
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="e.g., Sheet A"
+              />
             </div>
           </div>
-        ))}
-        {matches.length === 0 && (
-          <p className={styles.empty}>No matches added yet. Create rounds first, then add matches within them.</p>
+
+          <div className={styles.teamsFormRow}>
+            <div className={styles.teamForm}>
+              <label>Team A</label>
+              <div className={styles.teamInputs}>
+                <select
+                  value={form.team_a_country_id}
+                  onChange={(e) => setForm({ ...form, team_a_country_id: e.target.value })}
+                >
+                  <option value="">Country</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={form.team_a_name}
+                  onChange={(e) => setForm({ ...form, team_a_name: e.target.value })}
+                  placeholder="Team name (opt)"
+                />
+              </div>
+            </div>
+            <span className={styles.vsLabel}>VS</span>
+            <div className={styles.teamForm}>
+              <label>Team B</label>
+              <div className={styles.teamInputs}>
+                <select
+                  value={form.team_b_country_id}
+                  onChange={(e) => setForm({ ...form, team_b_country_id: e.target.value })}
+                >
+                  <option value="">Country</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={form.team_b_name}
+                  onChange={(e) => setForm({ ...form, team_b_name: e.target.value })}
+                  placeholder="Team name (opt)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary">Add Match</button>
+        </form>
+      )}
+
+      {/* Filter */}
+      <div className={styles.filterBar}>
+        <select
+          value={filterRoundId}
+          onChange={(e) => setFilterRoundId(e.target.value)}
+          className={styles.filterSelect}
+        >
+          <option value="">All Rounds with Matches</option>
+          {rounds.map((r) => (
+            <option key={r.id} value={r.id}>
+              {getFullRoundLabel(r)} ({matchesByRound[r.id]?.length || 0})
+            </option>
+          ))}
+        </select>
+        <span className={styles.matchCount}>
+          {matches.length} match{matches.length !== 1 ? 'es' : ''}
+        </span>
+      </div>
+
+      {/* Matches grouped by round */}
+      <div className={styles.roundGroups}>
+        {displayRounds.length > 0 ? (
+          displayRounds.map((round) => {
+            const roundMatches = matchesByRound[round.id] || [];
+            if (roundMatches.length === 0 && !filterRoundId) return null;
+
+            return (
+              <div key={round.id} className={styles.roundGroup}>
+                <div className={styles.roundGroupHeader}>
+                  <div>
+                    <span className={styles.roundGroupEvent}>
+                      {formatEventName(round.medal_event_name, round.gender)}
+                    </span>
+                    <span className={styles.roundGroupRound}>{getRoundLabel(round)}</span>
+                  </div>
+                  <span className={styles.roundGroupCount}>
+                    {roundMatches.length} match{roundMatches.length !== 1 ? 'es' : ''}
+                  </span>
+                </div>
+
+                {roundMatches.length > 0 ? (
+                  <div className={styles.matchesGrid}>
+                    {roundMatches.map((m) => (
+                      <div key={m.id} className={`${styles.matchCard} ${styles[`match${m.status.charAt(0).toUpperCase() + m.status.slice(1)}`]}`}>
+                        <div className={styles.matchCardTop}>
+                          {m.match_name && <span className={styles.matchLabel}>{m.match_name}</span>}
+                          {m.notes && <span className={styles.matchNotes}>{m.notes}</span>}
+                          <select
+                            value={m.status}
+                            onChange={(e) => handleUpdate(m.id, { status: e.target.value })}
+                            className={`${styles.statusBadgeSelect} ${styles[`status${m.status.charAt(0).toUpperCase() + m.status.slice(1)}`]}`}
+                          >
+                            <option value="scheduled">Scheduled</option>
+                            <option value="live">Live</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </div>
+
+                        <div className={styles.matchCardTeams}>
+                          <div className={styles.matchCardTeam}>
+                            {m.team_a_flag_url && (
+                              <img src={m.team_a_flag_url} alt="" className={styles.flagSmall} />
+                            )}
+                            <span className={styles.teamCode}>
+                              {m.team_a_country_code || m.team_a_name || 'TBD'}
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={m.team_a_score ?? ''}
+                            onChange={(e) => handleUpdate(m.id, { team_a_score: e.target.value })}
+                            className={styles.scoreBox}
+                            placeholder="-"
+                          />
+                          <span className={styles.scoreDivider}>:</span>
+                          <input
+                            type="text"
+                            value={m.team_b_score ?? ''}
+                            onChange={(e) => handleUpdate(m.id, { team_b_score: e.target.value })}
+                            className={styles.scoreBox}
+                            placeholder="-"
+                          />
+                          <div className={styles.matchCardTeam}>
+                            <span className={styles.teamCode}>
+                              {m.team_b_country_code || m.team_b_name || 'TBD'}
+                            </span>
+                            {m.team_b_flag_url && (
+                              <img src={m.team_b_flag_url} alt="" className={styles.flagSmall} />
+                            )}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleDelete(m.id)}
+                          className={styles.matchDeleteBtn}
+                          title="Delete match"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={styles.emptyRound}>No matches in this round yet.</p>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <p className={styles.empty}>
+            {rounds.length === 0
+              ? 'No rounds created yet. Create rounds first, then add matches.'
+              : 'No matches added yet. Click "+ Add Match" to create one.'}
+          </p>
         )}
       </div>
     </div>
