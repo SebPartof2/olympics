@@ -18,6 +18,12 @@ const ROUND_TYPES = [
   { value: 'preliminary', label: 'Preliminary' },
 ];
 
+function formatEventName(name, gender) {
+  if (!gender || gender === 'mixed') return name;
+  const prefix = gender === 'men' ? "Men's" : "Women's";
+  return `${prefix} ${name}`;
+}
+
 function AdminMatches() {
   const { selectedOlympicsId } = useOlympics();
   const { showMessage, MessageDisplay } = useAdminMessage();
@@ -125,7 +131,7 @@ function AdminMatches() {
               <option value="">Select Round</option>
               {rounds.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.medal_event_name} - {ROUND_TYPES.find((t) => t.value === r.round_type)?.label || r.round_type}
+                  {formatEventName(r.medal_event_name, r.gender)} - {ROUND_TYPES.find((t) => t.value === r.round_type)?.label || r.round_type}
                   {r.round_number > 1 ? ` ${r.round_number}` : ''}
                 </option>
               ))}
@@ -236,7 +242,7 @@ function AdminMatches() {
               </div>
             </div>
             <div className={styles.matchInfo}>
-              <span className={styles.matchRound}>{m.medal_event_name} - {m.round_type}</span>
+              <span className={styles.matchRound}>{formatEventName(m.medal_event_name, m.gender)} - {m.round_type}</span>
               {m.match_name && <span className={styles.matchName}>{m.match_name}</span>}
             </div>
             <div className={styles.eventActions}>

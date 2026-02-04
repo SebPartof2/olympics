@@ -18,6 +18,12 @@ const ROUND_TYPES = [
   { value: 'preliminary', label: 'Preliminary' },
 ];
 
+function formatEventName(name, gender) {
+  if (!gender || gender === 'mixed') return name;
+  const prefix = gender === 'men' ? "Men's" : "Women's";
+  return `${prefix} ${name}`;
+}
+
 function AdminRounds() {
   const { selectedOlympicsId } = useOlympics();
   const { showMessage, MessageDisplay } = useAdminMessage();
@@ -109,7 +115,7 @@ function AdminRounds() {
               <option value="">Select Medal Event</option>
               {medalEvents.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.sport_name}: {e.gender === 'men' ? 'M' : e.gender === 'women' ? 'W' : ''} {e.name}
+                  {e.sport_name}: {formatEventName(e.name, e.gender)}
                 </option>
               ))}
             </select>
@@ -172,7 +178,7 @@ function AdminRounds() {
                     r.round_number > 1 ? ` ${r.round_number}` : ''
                   }`}
               </span>
-              <span className={styles.sport}>{r.medal_event_name}</span>
+              <span className={styles.sport}>{formatEventName(r.medal_event_name, r.gender)}</span>
               <span className={styles.meta}>{new Date(r.start_time_utc).toLocaleString()}</span>
             </div>
             <div className={styles.eventActions}>

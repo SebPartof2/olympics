@@ -4,6 +4,12 @@ import { useOlympics } from '../../context/OlympicsContext';
 import { useAdminMessage } from './useAdminMessage';
 import styles from './Admin.module.css';
 
+function formatEventName(name, gender) {
+  if (!gender || gender === 'mixed') return name;
+  const prefix = gender === 'men' ? "Men's" : "Women's";
+  return `${prefix} ${name}`;
+}
+
 function AdminMedals() {
   const { selectedOlympicsId } = useOlympics();
   const { showMessage, MessageDisplay } = useAdminMessage();
@@ -85,7 +91,7 @@ function AdminMedals() {
               <option value="">Select Medal Event</option>
               {medalEvents.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.sport_name}: {e.gender === 'men' ? 'M' : e.gender === 'women' ? 'W' : ''} {e.name}
+                  {e.sport_name}: {formatEventName(e.name, e.gender)}
                 </option>
               ))}
             </select>
@@ -150,7 +156,7 @@ function AdminMedals() {
             <div className={styles.medalInfo}>
               <span className={styles.name}>{m.athlete_name}</span>
               <span className={styles.details}>
-                {m.country_code} · {m.event_name} {m.record_type && <strong>({m.record_type})</strong>}
+                {m.country_code} · {formatEventName(m.event_name, m.gender)} {m.record_type && <strong>({m.record_type})</strong>}
               </span>
               {m.result_value && <span className={styles.result}>{m.result_value}</span>}
             </div>

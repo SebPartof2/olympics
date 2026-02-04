@@ -4,6 +4,12 @@ import { useOlympics } from '../../context/OlympicsContext';
 import { useAdminMessage } from './useAdminMessage';
 import styles from './Admin.module.css';
 
+function formatEventName(name, gender) {
+  if (!gender || gender === 'mixed') return name;
+  const prefix = gender === 'men' ? "Men's" : "Women's";
+  return `${prefix} ${name}`;
+}
+
 function AdminEvents() {
   const { selectedOlympicsId } = useOlympics();
   const { showMessage, MessageDisplay } = useAdminMessage();
@@ -141,7 +147,7 @@ function AdminEvents() {
           <div key={e.id} className={styles.eventItem}>
             <div className={styles.eventInfo}>
               <span className={styles.name}>
-                {e.gender === 'men' ? "Men's" : e.gender === 'women' ? "Women's" : ''} {e.name}
+                {formatEventName(e.name, e.gender)}
               </span>
               <span className={styles.sport}>{e.sport_name}</span>
               <span className={styles.meta}>{e.round_count} rounds · {e.medal_count} medals</span>
