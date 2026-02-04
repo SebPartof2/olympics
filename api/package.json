@@ -1,0 +1,14 @@
+{
+  "name": "olympics-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute olympics-db --local --file=./src/schema.sql",
+    "db:migrate:prod": "wrangler d1 execute olympics-db --file=./src/schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

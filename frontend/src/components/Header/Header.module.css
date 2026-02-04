@@ -1,0 +1,85 @@
+.header {
+  background: linear-gradient(135deg, var(--olympic-blue) 0%, #005a8c 100%);
+  color: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+  text-decoration: none;
+}
+
+.logo:hover {
+  text-decoration: none;
+}
+
+.rings {
+  width: 48px;
+  height: auto;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.nav a:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.15);
+  text-decoration: none;
+}
+
+.nav a.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.adminLink {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.adminLink.authenticated {
+  border-color: var(--olympic-green);
+  background-color: rgba(0, 166, 81, 0.2);
+}
+
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+}

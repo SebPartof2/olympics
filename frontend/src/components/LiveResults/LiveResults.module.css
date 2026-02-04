@@ -1,0 +1,196 @@
+.wrapper {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.liveIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--olympic-red);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.lastUpdate {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.eventCard {
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.eventHeader {
+  background: linear-gradient(135deg, var(--olympic-red) 0%, #cc2a3f 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.eventName {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.eventSport {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.resultsTable {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.resultsTable table {
+  width: 100%;
+  min-width: 400px;
+}
+
+.resultsTable th {
+  text-align: left;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.resultsTable td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.resultsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.topPosition {
+  background-color: rgba(255, 215, 0, 0.1);
+}
+
+.position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background-color: var(--bg-primary);
+}
+
+.first {
+  background-color: var(--gold);
+  color: #333;
+}
+
+.second {
+  background-color: var(--silver);
+  color: #333;
+}
+
+.third {
+  background-color: var(--bronze);
+  color: white;
+}
+
+.countryCode {
+  display: inline-block;
+  padding: 0.15rem 0.35rem;
+  background-color: var(--olympic-blue);
+  color: white;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.score {
+  font-weight: 600;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.noResults {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.updateTime {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  text-align: right;
+}
+
+.empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.emptyIcon {
+  display: inline-block;
+  background-color: var(--text-secondary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty p {
+  color: var(--text-secondary);
+  margin: 0.5rem 0;
+}
+
+.emptyHint {
+  font-size: 0.9rem;
+}

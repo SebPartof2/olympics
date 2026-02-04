@@ -1,0 +1,149 @@
+.wrapper {
+  width: 100%;
+}
+
+.search {
+  margin-bottom: 1rem;
+}
+
+.search input {
+  width: 100%;
+  max-width: 300px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.search input:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+  box-shadow: 0 0 0 3px rgba(0, 129, 200, 0.1);
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.table th {
+  background-color: var(--bg-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable:hover {
+  background-color: var(--border-color);
+}
+
+.sortIcon {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.rankCol {
+  width: 60px;
+}
+
+.countryCol {
+  text-align: left !important;
+  min-width: 200px;
+}
+
+.medalCol {
+  width: 80px;
+}
+
+.totalCol {
+  width: 80px;
+  font-weight: 600;
+}
+
+.rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: var(--bg-primary);
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+tr:nth-child(1) .rank {
+  background-color: var(--gold);
+  color: #333;
+}
+
+tr:nth-child(2) .rank {
+  background-color: var(--silver);
+  color: #333;
+}
+
+tr:nth-child(3) .rank {
+  background-color: var(--bronze);
+  color: white;
+}
+
+.countryInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.countryCode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--olympic-blue);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.countryName {
+  font-weight: 500;
+}
+
+.medalCount {
+  font-weight: 500;
+}
+
+.totalCount {
+  font-weight: 700;
+  color: var(--olympic-blue);
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.noResults {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}

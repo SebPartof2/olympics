@@ -1,0 +1,131 @@
+.wrapper {
+  width: 100%;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 150px;
+  background-color: var(--bg-secondary);
+}
+
+.filter:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+}
+
+.dateGroup {
+  margin-bottom: 2rem;
+}
+
+.dateHeader {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--olympic-blue);
+}
+
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.eventCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 4px solid var(--olympic-blue);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.eventCard:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.eventCard.live {
+  border-left-color: var(--olympic-red);
+  background: linear-gradient(90deg, rgba(238, 51, 78, 0.05) 0%, var(--bg-secondary) 100%);
+}
+
+.eventCard.completed {
+  border-left-color: var(--olympic-green);
+  opacity: 0.85;
+}
+
+.eventTime {
+  min-width: 80px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.eventInfo {
+  flex: 1;
+}
+
+.eventName {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.eventSport {
+  font-size: 0.85rem;
+  color: var(--olympic-blue);
+  font-weight: 500;
+}
+
+.eventVenue {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.eventStatus {
+  margin-left: auto;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.noResults {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .eventCard {
+    flex-wrap: wrap;
+  }
+
+  .eventTime {
+    min-width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .eventStatus {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}

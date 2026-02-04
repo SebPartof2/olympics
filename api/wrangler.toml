@@ -1,0 +1,11 @@
+name = "olympics-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+ADMIN_PASSWORD = "olympics-admin-2024"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "olympics-db"
+database_id = "local"
