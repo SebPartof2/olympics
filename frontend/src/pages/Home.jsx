@@ -38,11 +38,18 @@ function Home() {
       final: 'Final',
       bronze_final: 'Bronze Final',
       group_stage: 'Group Stage',
+      round_robin: 'Round Robin',
       knockout: 'Knockout',
       qualification: 'Qualification',
       preliminary: 'Preliminary',
     };
     return labels[type] || type;
+  }
+
+  function formatEventName(name, gender) {
+    if (!gender || gender === 'mixed') return name;
+    const prefix = gender === 'men' ? "Men's" : "Women's";
+    return `${prefix} ${name}`;
   }
 
   if (loading || olympicsLoading) {
@@ -148,7 +155,7 @@ function Home() {
                     </div>
                     <div className={styles.roundInfo}>
                       <div className={styles.roundName}>
-                        {round.medal_event_name} - {getRoundTypeLabel(round.round_type)}
+                        {formatEventName(round.medal_event_name, round.gender)} - {getRoundTypeLabel(round.round_type)}
                         {round.round_number > 1 && ` ${round.round_number}`}
                       </div>
                       <div className={styles.roundSport}>{round.sport_name}</div>
@@ -165,7 +172,7 @@ function Home() {
                     </div>
                     <div className={styles.roundInfo}>
                       <div className={styles.roundName}>
-                        {round.medal_event_name} - {getRoundTypeLabel(round.round_type)}
+                        {formatEventName(round.medal_event_name, round.gender)} - {getRoundTypeLabel(round.round_type)}
                         {round.round_number > 1 && ` ${round.round_number}`}
                       </div>
                       <div className={styles.roundSport}>{round.sport_name}</div>

@@ -36,13 +36,10 @@ function Events() {
     }
   }
 
-  function getGenderLabel(gender) {
-    const labels = {
-      men: "Men's",
-      women: "Women's",
-      mixed: 'Mixed',
-    };
-    return labels[gender] || gender;
+  function formatEventName(name, gender) {
+    if (!gender || gender === 'mixed') return name;
+    const prefix = gender === 'men' ? "Men's" : "Women's";
+    return `${prefix} ${name}`;
   }
 
   function getMedalStatus(event) {
@@ -172,7 +169,7 @@ function Events() {
                     <Link key={event.id} to={`/events/${event.id}`} className={`${styles.eventCard} ${styles[status]}`}>
                       <div className={styles.eventInfo}>
                         <div className={styles.eventName}>
-                          {getGenderLabel(event.gender)} {event.name}
+                          {formatEventName(event.name, event.gender)}
                         </div>
                         <div className={styles.eventMeta}>
                           {event.venue && (
