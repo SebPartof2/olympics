@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './MedalTable.module.css';
 
 function MedalTable({ data, limit = null, showSearch = false }) {
@@ -104,14 +105,14 @@ function MedalTable({ data, limit = null, showSearch = false }) {
                   <span className={styles.rank}>{index + 1}</span>
                 </td>
                 <td className={styles.countryCol}>
-                  <div className={styles.countryInfo}>
+                  <Link to={`/team/${country.code}`} className={styles.countryInfo}>
                     {country.flag_url ? (
                       <img src={country.flag_url} alt={country.code} className={styles.flag} />
                     ) : (
                       <span className={styles.countryCode}>{country.code}</span>
                     )}
                     <span className={styles.countryName}>{country.name}</span>
-                  </div>
+                  </Link>
                 </td>
                 <td className={styles.medalCol}>
                   <span className={styles.medalCount}>{country.gold || 0}</span>

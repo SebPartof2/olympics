@@ -6,6 +6,7 @@ import Events from './pages/Events';
 import MedalEvent from './pages/MedalEvent';
 import Schedule from './pages/Schedule';
 import Live from './pages/Live';
+import Team from './pages/Team';
 import {
   AdminLayout,
   AdminDashboard,
@@ -32,6 +33,7 @@ function App() {
           <Route path="/events/:id" element={<MedalEvent />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/live" element={<Live />} />
+          <Route path="/team/:countryCode" element={<Team />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="olympics" element={<AdminOlympics />} />

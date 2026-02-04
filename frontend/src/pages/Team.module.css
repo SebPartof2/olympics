@@ -1,0 +1,430 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.countryInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.flag {
+  width: 80px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.countryCode {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Medal Summary */
+.medalSummary {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.medalBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  min-width: 60px;
+}
+
+.medalBoxTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--olympic-blue);
+  border-radius: 8px;
+  min-width: 60px;
+  color: white;
+}
+
+.totalLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.medalCount {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.activeTab {
+  background-color: var(--olympic-blue);
+  color: white;
+}
+
+.activeTab:hover {
+  background-color: var(--olympic-blue);
+  color: white;
+}
+
+.liveTab {
+  animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.liveTab.activeTab {
+  background-color: var(--olympic-red);
+}
+
+.tabCount {
+  font-size: 0.8rem;
+  padding: 0.15rem 0.5rem;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.activeTab .tabCount {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Date Groups */
+.dateGroup {
+  margin-bottom: 1.5rem;
+}
+
+.dateGroup:last-child {
+  margin-bottom: 0;
+}
+
+.dateHeader {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--olympic-blue);
+}
+
+/* Matches List */
+.matchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.matchCard {
+  position: relative;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid var(--border-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.matchCard:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.matchCard.scheduled {
+  border-left-color: var(--text-secondary);
+}
+
+.matchCard.live {
+  border-left-color: var(--olympic-red);
+  background: linear-gradient(90deg, rgba(238, 51, 78, 0.05) 0%, var(--bg-primary) 100%);
+}
+
+.matchCard.completed {
+  border-left-color: var(--olympic-green);
+}
+
+.matchCard.win {
+  border-left-color: var(--olympic-green);
+}
+
+.matchCard.loss {
+  border-left-color: var(--olympic-red);
+  opacity: 0.9;
+}
+
+.matchCard.draw {
+  border-left-color: var(--olympic-yellow);
+}
+
+.liveIndicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  background-color: var(--olympic-red);
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.matchMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.sportName {
+  color: var(--olympic-blue);
+  font-weight: 600;
+}
+
+.eventName {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.roundName,
+.matchName {
+  color: var(--text-secondary);
+}
+
+.matchContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.team:first-child {
+  justify-content: flex-end;
+}
+
+.team:last-child {
+  justify-content: flex-start;
+}
+
+.team.highlight {
+  font-weight: 600;
+}
+
+.team.winner .teamName {
+  font-weight: 700;
+}
+
+.team.winner .score {
+  color: var(--olympic-green);
+  font-weight: 700;
+}
+
+.teamFlag {
+  width: 28px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.teamName {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.score {
+  font-size: 1.25rem;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: center;
+}
+
+.vs {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.matchFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+}
+
+.matchTime {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.resultBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.resultBadge.win {
+  background-color: var(--olympic-green);
+  color: white;
+}
+
+.resultBadge.loss {
+  background-color: var(--olympic-red);
+  color: white;
+}
+
+.resultBadge.draw {
+  background-color: var(--olympic-yellow);
+  color: #333;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: var(--olympic-blue);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .medalSummary {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .medalBox,
+  .medalBoxTotal {
+    flex: 1;
+    min-width: auto;
+  }
+
+  .matchContent {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .team {
+    width: 100%;
+    justify-content: space-between !important;
+  }
+
+  .vs {
+    padding: 0.25rem 0;
+  }
+
+  .tabs {
+    gap: 0.25rem;
+  }
+
+  .tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .flag {
+    width: 60px;
+    height: 40px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .medalBox,
+  .medalBoxTotal {
+    padding: 0.5rem;
+  }
+
+  .medalCount {
+    font-size: 1rem;
+  }
+}
