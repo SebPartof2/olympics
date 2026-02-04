@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { formatLocalTime } from '../../services/api';
 import styles from './LiveResults.module.css';
 
-function LiveResults({ results, events, onRefresh }) {
+function LiveResults({ rounds, onRefresh }) {
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   // Auto-refresh every 30 seconds
@@ -16,31 +17,23 @@ function LiveResults({ results, events, onRefresh }) {
     return () => clearInterval(interval);
   }, [onRefresh]);
 
-  // Group results by event
-  const liveEvents = events.filter((e) => e.status === 'live');
-
-  const resultsByEvent = results.reduce((groups, result) => {
-    const eventId = result.event_id;
-    if (!groups[eventId]) {
-      groups[eventId] = [];
-    }
-    groups[eventId].push(result);
-    return groups;
-  }, {});
-
-  function formatUpdateTime(dateStr) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  function getRoundTypeLabel(type) {
+    const labels = {
+      heat: 'Heat',
+      repechage: 'Repechage',
+      quarterfinal: 'Quarterfinal',
+      semifinal: 'Semifinal',
+      final: 'Final',
+      bronze_final: 'Bronze Final',
+      group_stage: 'Group Stage',
+      knockout: 'Knockout',
+      qualification: 'Qualification',
+      preliminary: 'Preliminary',
+    };
+    return labels[type] || type;
   }
 
-  if (liveEvents.length === 0 && Object.keys(resultsByEvent).length === 0) {
+  if (!rounds || rounds.length === 0) {
     return (
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>LIVE</div>
@@ -63,82 +56,38 @@ function LiveResults({ results, events, onRefresh }) {
       </div>
 
       <div className={styles.eventsList}>
-        {liveEvents.map((event) => {
-          const eventResults = resultsByEvent[event.id] || [];
-          return (
-            <div key={event.id} className={styles.eventCard}>
-              <div className={styles.eventHeader}>
-                <span className={styles.eventName}>{event.name}</span>
-                {event.sport_name && (
-                  <span className={styles.eventSport}>{event.sport_name}</span>
-                )}
-              </div>
-
-              {eventResults.length > 0 ? (
-                <div className={styles.resultsTable}>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Pos</th>
-                        <th>Athlete/Team</th>
-                        <th>Country</th>
-                        <th>Score/Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {eventResults
-                        .sort((a, b) => (a.position || 999) - (b.position || 999))
-                        .map((result) => (
-                          <tr
-                            key={result.id}
-                            className={result.position <= 3 ? styles.topPosition : ''}
-                          >
-                            <td>
-                              {result.position ? (
-                                <span
-                                  className={`${styles.position} ${
-                                    result.position === 1
-                                      ? styles.first
-                                      : result.position === 2
-                                      ? styles.second
-                                      : result.position === 3
-                                      ? styles.third
-                                      : ''
-                                  }`}
-                                >
-                                  {result.position}
-                                </span>
-                              ) : (
-                                '-'
-                              )}
-                            </td>
-                            <td>{result.athlete_name || '-'}</td>
-                            <td>
-                              {result.country_code && (
-                                <span className={styles.countryCode}>
-                                  {result.country_code}
-                                </span>
-                              )}
-                              {result.country_name || '-'}
-                            </td>
-                            <td className={styles.score}>{result.score || '-'}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className={styles.noResults}>No results recorded yet.</p>
-              )}
-
-              {eventResults.length > 0 && eventResults[0].updated_at && (
-                <div className={styles.updateTime}>
-                  Updated {formatUpdateTime(eventResults[0].updated_at)}
-                </div>
-              )}
+        {rounds.map((round) => (
+          <div key={round.id} className={styles.eventCard}>
+            <div className={styles.eventHeader}>
+              <span className={styles.eventName}>
+                {round.medal_event_name}
+                {round.round_name
+                  ? ` - ${round.round_name}`
+                  : ` - ${getRoundTypeLabel(round.round_type)}${round.round_number > 1 ? ` ${round.round_number}` : ''}`
+                }
+              </span>
+              <span className={styles.eventSport}>{round.sport_name}</span>
             </div>
-          );
-        })}
+            <div className={styles.roundMeta}>
+              {round.gender && round.gender !== 'mixed' && (
+                <span className={styles.gender}>
+                  {round.gender === 'men' ? "Men's" : "Women's"}
+                </span>
+              )}
+              {(round.round_venue || round.event_venue) && (
+                <span className={styles.venue}>
+                  {round.round_venue || round.event_venue}
+                </span>
+              )}
+              <span className={styles.startTime}>
+                Started: {formatLocalTime(round.start_time_utc)}
+              </span>
+            </div>
+            <p className={styles.noResults}>
+              Live updates will appear here as results are recorded.
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

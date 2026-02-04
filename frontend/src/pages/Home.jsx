@@ -1,23 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
+import api, { formatLocalTime } from '../services/api';
+import { useOlympics } from '../context/OlympicsContext';
 import MedalTable from '../components/MedalTable/MedalTable';
-import EventSchedule from '../components/EventSchedule/EventSchedule';
 import styles from './Home.module.css';
 
 function Home() {
+  const { selectedOlympics, selectedOlympicsId, isLoading: olympicsLoading } = useOlympics();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    if (!olympicsLoading && selectedOlympicsId) {
+      loadStats();
+    }
+  }, [selectedOlympicsId, olympicsLoading]);
 
   async function loadStats() {
     try {
       setLoading(true);
-      const data = await api.getStats();
+      const data = await api.getStats(selectedOlympicsId);
       setStats(data);
     } catch (err) {
       setError(err.message);
@@ -26,7 +29,23 @@ function Home() {
     }
   }
 
-  if (loading) {
+  function getRoundTypeLabel(type) {
+    const labels = {
+      heat: 'Heat',
+      repechage: 'Repechage',
+      quarterfinal: 'Quarterfinal',
+      semifinal: 'Semifinal',
+      final: 'Final',
+      bronze_final: 'Bronze Final',
+      group_stage: 'Group Stage',
+      knockout: 'Knockout',
+      qualification: 'Qualification',
+      preliminary: 'Preliminary',
+    };
+    return labels[type] || type;
+  }
+
+  if (loading || olympicsLoading) {
     return <div className="loading"></div>;
   }
 
@@ -38,10 +57,26 @@ function Home() {
     );
   }
 
+  if (!selectedOlympics) {
+    return (
+      <div className="container">
+        <div className={styles.emptyState}>
+          No Olympics configured yet. Visit the Admin panel to create one.
+        </div>
+      </div>
+    );
+  }
+
+  const olympicsName = selectedOlympics?.name || 'Olympics Tracker';
+  const olympicsLocation = `${selectedOlympics?.city || ''}, ${selectedOlympics?.country || ''}`;
+
   return (
     <div className={`container ${styles.home}`}>
       <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>Olympics Tracker</h1>
+        <h1 className={styles.heroTitle}>{olympicsName}</h1>
+        {olympicsLocation && (
+          <p className={styles.heroSubtitle}>{olympicsLocation}</p>
+        )}
         <p className={styles.heroSubtitle}>
           Follow the latest medals, events, and live results
         </p>
@@ -57,16 +92,16 @@ function Home() {
           <span className={styles.statLabel}>Sports</span>
         </div>
         <div className={styles.statCard}>
-          <span className={styles.statNumber}>{stats?.counts?.events || 0}</span>
+          <span className={styles.statNumber}>{stats?.counts?.medalEvents || 0}</span>
           <span className={styles.statLabel}>Events</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statNumber}>{stats?.counts?.medals || 0}</span>
           <span className={styles.statLabel}>Medals</span>
         </div>
-        {stats?.counts?.liveEvents > 0 && (
+        {stats?.counts?.liveRounds > 0 && (
           <div className={`${styles.statCard} ${styles.liveCard}`}>
-            <span className={styles.statNumber}>{stats.counts.liveEvents}</span>
+            <span className={styles.statNumber}>{stats.counts.liveRounds}</span>
             <span className={styles.statLabel}>Live Now</span>
           </div>
         )}
@@ -93,17 +128,51 @@ function Home() {
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2>Today's Events</h2>
+            <h2>
+              {stats?.liveNow?.length > 0 ? 'Live Now' : 'Upcoming Events'}
+            </h2>
             <Link to="/schedule" className={styles.viewAll}>
               View All →
             </Link>
           </div>
           <div className="card">
-            {stats?.todayEvents?.length > 0 ? (
-              <EventSchedule events={stats.todayEvents} />
+            {stats?.liveNow?.length > 0 ? (
+              <div className={styles.roundsList}>
+                {stats.liveNow.map((round) => (
+                  <div key={round.id} className={`${styles.roundCard} ${styles.live}`}>
+                    <div className={styles.roundTime}>
+                      <span className="badge badge-live">LIVE</span>
+                    </div>
+                    <div className={styles.roundInfo}>
+                      <div className={styles.roundName}>
+                        {round.medal_event_name} - {getRoundTypeLabel(round.round_type)}
+                        {round.round_number > 1 && ` ${round.round_number}`}
+                      </div>
+                      <div className={styles.roundSport}>{round.sport_name}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : stats?.upcomingRounds?.length > 0 ? (
+              <div className={styles.roundsList}>
+                {stats.upcomingRounds.slice(0, 5).map((round) => (
+                  <div key={round.id} className={styles.roundCard}>
+                    <div className={styles.roundTime}>
+                      {formatLocalTime(round.start_time_utc)}
+                    </div>
+                    <div className={styles.roundInfo}>
+                      <div className={styles.roundName}>
+                        {round.medal_event_name} - {getRoundTypeLabel(round.round_type)}
+                        {round.round_number > 1 && ` ${round.round_number}`}
+                      </div>
+                      <div className={styles.roundSport}>{round.sport_name}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <p className={styles.emptyState}>
-                No events scheduled for today. Visit the Admin panel to add events.
+                No upcoming events scheduled. Visit the Admin panel to add events.
               </p>
             )}
           </div>

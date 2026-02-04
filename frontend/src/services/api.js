@@ -3,6 +3,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 class ApiService {
   constructor() {
     this.token = localStorage.getItem('adminToken') || '';
+    this.defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
   setToken(token) {
@@ -49,6 +50,18 @@ class ApiService {
     }
   }
 
+  // Settings
+  async getSettings() {
+    return this.request('/settings', { auth: false });
+  }
+
+  async updateSettings(data) {
+    return this.request('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Countries
   async getCountries() {
     return this.request('/countries', { auth: false });
@@ -81,38 +94,96 @@ class ApiService {
     return this.request(`/sports/${id}`, { method: 'DELETE' });
   }
 
-  // Events
-  async getEvents(params = {}) {
+  // Medal Events
+  async getMedalEvents(params = {}) {
     const searchParams = new URLSearchParams(params).toString();
-    const endpoint = searchParams ? `/events?${searchParams}` : '/events';
+    const endpoint = searchParams ? `/medal-events?${searchParams}` : '/medal-events';
     return this.request(endpoint, { auth: false });
   }
 
-  async addEvent(data) {
-    return this.request('/events', {
+  async getMedalEvent(id) {
+    return this.request(`/medal-events/${id}`, { auth: false });
+  }
+
+  async addMedalEvent(data) {
+    return this.request('/medal-events', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateEvent(id, data) {
-    return this.request(`/events/${id}`, {
+  async updateMedalEvent(id, data) {
+    return this.request(`/medal-events/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteEvent(id) {
-    return this.request(`/events/${id}`, { method: 'DELETE' });
+  async deleteMedalEvent(id) {
+    return this.request(`/medal-events/${id}`, { method: 'DELETE' });
+  }
+
+  // Rounds (sub-events)
+  async getRounds(params = {}) {
+    const searchParams = new URLSearchParams(params).toString();
+    const endpoint = searchParams ? `/rounds?${searchParams}` : '/rounds';
+    return this.request(endpoint, { auth: false });
+  }
+
+  async getRound(id) {
+    return this.request(`/rounds/${id}`, { auth: false });
+  }
+
+  async addRound(data) {
+    return this.request('/rounds', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateRound(id, data) {
+    return this.request(`/rounds/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRound(id) {
+    return this.request(`/rounds/${id}`, { method: 'DELETE' });
+  }
+
+  // Round Results
+  async getRoundResults(roundId) {
+    return this.request(`/round-results?round=${roundId}`, { auth: false });
+  }
+
+  async addRoundResult(data) {
+    return this.request('/round-results', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateRoundResult(id, data) {
+    return this.request(`/round-results/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRoundResult(id) {
+    return this.request(`/round-results/${id}`, { method: 'DELETE' });
   }
 
   // Medals
-  async getMedalStandings() {
-    return this.request('/medals', { auth: false });
+  async getMedalStandings(olympicsId) {
+    const endpoint = olympicsId ? `/medals?olympics=${olympicsId}` : '/medals';
+    return this.request(endpoint, { auth: false });
   }
 
-  async getAllMedals() {
-    return this.request('/medals/all', { auth: false });
+  async getAllMedals(olympicsId) {
+    const endpoint = olympicsId ? `/medals/all?olympics=${olympicsId}` : '/medals/all';
+    return this.request(endpoint, { auth: false });
   }
 
   async awardMedal(data) {
@@ -126,34 +197,110 @@ class ApiService {
     return this.request(`/medals/${id}`, { method: 'DELETE' });
   }
 
-  // Results
-  async getResults(eventId = null) {
-    const endpoint = eventId ? `/results?event=${eventId}` : '/results';
+  // Schedule
+  async getSchedule(params = {}) {
+    const searchParams = new URLSearchParams(params).toString();
+    const endpoint = searchParams ? `/schedule?${searchParams}` : '/schedule';
     return this.request(endpoint, { auth: false });
   }
 
-  async addResult(data) {
-    return this.request('/results', {
+  // Live rounds
+  async getLiveRounds(olympicsId) {
+    const endpoint = olympicsId ? `/rounds?status=live&olympics=${olympicsId}` : '/rounds?status=live';
+    return this.request(endpoint, { auth: false });
+  }
+
+  // Stats
+  async getStats(olympicsId) {
+    const endpoint = olympicsId ? `/stats?olympics=${olympicsId}` : '/stats';
+    return this.request(endpoint, { auth: false });
+  }
+
+  // Olympics
+  async getOlympics() {
+    return this.request('/olympics', { auth: false });
+  }
+
+  async getOlympicsById(id) {
+    return this.request(`/olympics/${id}`, { auth: false });
+  }
+
+  async addOlympics(data) {
+    return this.request('/olympics', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateResult(id, data) {
-    return this.request(`/results/${id}`, {
+  async updateOlympics(id, data) {
+    return this.request(`/olympics/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteResult(id) {
-    return this.request(`/results/${id}`, { method: 'DELETE' });
+  async deleteOlympics(id) {
+    return this.request(`/olympics/${id}`, { method: 'DELETE' });
   }
 
-  // Stats
-  async getStats() {
-    return this.request('/stats', { auth: false });
+  async activateOlympics(id) {
+    return this.request(`/olympics/${id}/activate`, { method: 'POST' });
   }
+}
+
+// Timezone utilities
+export function formatLocalTime(utcDateString, timezone) {
+  if (!utcDateString) return 'TBD';
+  const date = new Date(utcDateString);
+  return date.toLocaleString('en-US', {
+    timeZone: timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+export function formatLocalDate(utcDateString, timezone) {
+  if (!utcDateString) return 'TBD';
+  const date = new Date(utcDateString);
+  return date.toLocaleDateString('en-US', {
+    timeZone: timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+export function formatTime(utcDateString, timezone) {
+  if (!utcDateString) return 'TBD';
+  const date = new Date(utcDateString);
+  return date.toLocaleTimeString('en-US', {
+    timeZone: timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+export function toUTCString(localDateString, timezone) {
+  // Convert local datetime-local input to UTC ISO string
+  if (!localDateString) return null;
+  const date = new Date(localDateString);
+  return date.toISOString();
+}
+
+export function toLocalInputValue(utcDateString, timezone) {
+  // Convert UTC to datetime-local input format
+  if (!utcDateString) return '';
+  const date = new Date(utcDateString);
+  // Format: YYYY-MM-DDTHH:MM
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
 }
 
 export const api = new ApiService();

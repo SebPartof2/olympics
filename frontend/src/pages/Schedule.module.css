@@ -12,3 +12,140 @@
 .header p {
   color: var(--text-secondary);
 }
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 150px;
+  background-color: var(--bg-secondary);
+}
+
+.filter:focus {
+  outline: none;
+  border-color: var(--olympic-blue);
+}
+
+.dateGroup {
+  margin-bottom: 2rem;
+}
+
+.dateGroup:last-child {
+  margin-bottom: 0;
+}
+
+.dateHeader {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--olympic-blue);
+}
+
+.roundsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.roundCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  border-left: 4px solid var(--olympic-blue);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.roundCard:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.roundCard.live {
+  border-left-color: var(--olympic-red);
+  background: linear-gradient(90deg, rgba(238, 51, 78, 0.05) 0%, var(--bg-primary) 100%);
+}
+
+.roundCard.completed {
+  border-left-color: var(--olympic-green);
+  opacity: 0.85;
+}
+
+.roundTime {
+  min-width: 80px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.roundInfo {
+  flex: 1;
+}
+
+.roundName {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.roundMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.roundSport {
+  color: var(--olympic-blue);
+  font-weight: 500;
+}
+
+.roundGender {
+  color: var(--text-secondary);
+}
+
+.roundVenue {
+  color: var(--text-secondary);
+}
+
+.roundVenue::before {
+  content: '📍 ';
+}
+
+.roundStatus {
+  margin-left: auto;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .roundCard {
+    flex-wrap: wrap;
+  }
+
+  .roundTime {
+    min-width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .roundStatus {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}

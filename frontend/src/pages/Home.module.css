@@ -99,6 +99,47 @@
   color: var(--text-secondary);
 }
 
+.roundsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.roundCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  border-left: 3px solid var(--olympic-blue);
+}
+
+.roundCard.live {
+  border-left-color: var(--olympic-red);
+  background: linear-gradient(90deg, rgba(238, 51, 78, 0.08) 0%, var(--bg-primary) 100%);
+}
+
+.roundTime {
+  min-width: 120px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.roundInfo {
+  flex: 1;
+}
+
+.roundName {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.roundSport {
+  font-size: 0.8rem;
+  color: var(--olympic-blue);
+}
+
 @media (max-width: 500px) {
   .content {
     grid-template-columns: 1fr;

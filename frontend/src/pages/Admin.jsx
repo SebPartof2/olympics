@@ -1,42 +1,61 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { useOlympics } from '../context/OlympicsContext';
+import api, { toLocalInputValue } from '../services/api';
 import styles from './Admin.module.css';
+
+const ROUND_TYPES = [
+  { value: 'heat', label: 'Heat' },
+  { value: 'repechage', label: 'Repechage' },
+  { value: 'quarterfinal', label: 'Quarterfinal' },
+  { value: 'semifinal', label: 'Semifinal' },
+  { value: 'final', label: 'Final' },
+  { value: 'bronze_final', label: 'Bronze Final' },
+  { value: 'group_stage', label: 'Group Stage' },
+  { value: 'knockout', label: 'Knockout' },
+  { value: 'qualification', label: 'Qualification' },
+  { value: 'preliminary', label: 'Preliminary' },
+];
+
+const OLYMPICS_TYPES = [
+  { value: 'summer', label: 'Summer Olympics' },
+  { value: 'winter', label: 'Winter Olympics' },
+  { value: 'youth', label: 'Youth Olympics' },
+  { value: 'paralympics', label: 'Paralympics' },
+];
 
 function Admin() {
   const { isAuthenticated, isLoading, login, logout } = useAuth();
+  const { selectedOlympicsId, refreshOlympics, olympicsList } = useOlympics();
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState('countries');
+  const [activeTab, setActiveTab] = useState('olympics');
 
   // Data states
+  const [settings, setSettings] = useState({});
   const [countries, setCountries] = useState([]);
   const [sports, setSports] = useState([]);
-  const [events, setEvents] = useState([]);
+  const [medalEvents, setMedalEvents] = useState([]);
+  const [rounds, setRounds] = useState([]);
   const [medals, setMedals] = useState([]);
 
   // Form states
+  const [settingsForm, setSettingsForm] = useState({
+    default_timezone: '',
+  });
+  const [olympicsForm, setOlympicsForm] = useState({
+    name: '', year: new Date().getFullYear(), type: 'summer', city: '', country: '', start_date: '', end_date: '',
+  });
   const [countryForm, setCountryForm] = useState({ name: '', code: '' });
   const [sportForm, setSportForm] = useState({ name: '' });
-  const [eventForm, setEventForm] = useState({
-    sport_id: '',
-    name: '',
-    event_date: '',
-    venue: '',
-    status: 'scheduled',
+  const [medalEventForm, setMedalEventForm] = useState({
+    olympics_id: '', sport_id: '', name: '', gender: 'mixed', event_type: 'individual', venue: '', scheduled_date: '',
+  });
+  const [roundForm, setRoundForm] = useState({
+    medal_event_id: '', round_type: 'heat', round_number: 1, round_name: '', start_time_utc: '', venue: '',
   });
   const [medalForm, setMedalForm] = useState({
-    event_id: '',
-    country_id: '',
-    athlete_name: '',
-    medal_type: 'gold',
-  });
-  const [resultForm, setResultForm] = useState({
-    event_id: '',
-    country_id: '',
-    athlete_name: '',
-    score: '',
-    position: '',
+    medal_event_id: '', country_id: '', athlete_name: '', medal_type: 'gold', result_value: '', record_type: '',
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -45,20 +64,31 @@ function Admin() {
     if (isAuthenticated) {
       loadAllData();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, selectedOlympicsId]);
 
   async function loadAllData() {
     try {
-      const [countriesData, sportsData, eventsData, medalsData] = await Promise.all([
+      const [settingsData, countriesData, sportsData, medalEventsData, roundsData, medalsData] = await Promise.all([
+        api.getSettings(),
         api.getCountries(),
         api.getSports(),
-        api.getEvents(),
-        api.getAllMedals(),
+        api.getMedalEvents(selectedOlympicsId ? { olympics: selectedOlympicsId } : {}),
+        api.getRounds(selectedOlympicsId ? { olympics: selectedOlympicsId } : {}),
+        api.getAllMedals(selectedOlympicsId),
       ]);
+      setSettings(settingsData);
+      setSettingsForm({
+        default_timezone: settingsData.default_timezone || 'America/New_York',
+      });
       setCountries(countriesData);
       setSports(sportsData);
-      setEvents(eventsData);
+      setMedalEvents(medalEventsData);
+      setRounds(roundsData);
       setMedals(medalsData);
+      // Set default olympics_id for medal event form
+      if (selectedOlympicsId) {
+        setMedalEventForm(prev => ({ ...prev, olympics_id: selectedOlympicsId }));
+      }
     } catch (err) {
       showMessage('error', 'Failed to load data: ' + err.message);
     }
@@ -73,19 +103,64 @@ function Admin() {
     e.preventDefault();
     setLoginError('');
     const success = await login(password);
-    if (!success) {
-      setLoginError('Invalid password');
-    }
+    if (!success) setLoginError('Invalid password');
     setPassword('');
   }
 
+  // Settings handlers
+  async function handleSaveSettings(e) {
+    e.preventDefault();
+    try {
+      await api.updateSettings(settingsForm);
+      loadAllData();
+      showMessage('success', 'Settings saved');
+    } catch (err) {
+      showMessage('error', err.message);
+    }
+  }
+
+  // Olympics handlers
+  async function handleAddOlympics(e) {
+    e.preventDefault();
+    try {
+      await api.addOlympics(olympicsForm);
+      setOlympicsForm({ name: '', year: new Date().getFullYear(), type: 'summer', city: '', country: '', start_date: '', end_date: '' });
+      refreshOlympics();
+      showMessage('success', 'Olympics added');
+    } catch (err) {
+      showMessage('error', err.message);
+    }
+  }
+
+  async function handleActivateOlympics(id) {
+    try {
+      await api.activateOlympics(id);
+      refreshOlympics();
+      showMessage('success', 'Olympics activated');
+    } catch (err) {
+      showMessage('error', err.message);
+    }
+  }
+
+  async function handleDeleteOlympics(id) {
+    if (!confirm('Delete this Olympics and all its events and medals?')) return;
+    try {
+      await api.deleteOlympics(id);
+      refreshOlympics();
+      showMessage('success', 'Olympics deleted');
+    } catch (err) {
+      showMessage('error', err.message);
+    }
+  }
+
+  // Country handlers
   async function handleAddCountry(e) {
     e.preventDefault();
     try {
       await api.addCountry(countryForm);
       setCountryForm({ name: '', code: '' });
       loadAllData();
-      showMessage('success', 'Country added successfully');
+      showMessage('success', 'Country added');
     } catch (err) {
       showMessage('error', err.message);
     }
@@ -102,13 +177,14 @@ function Admin() {
     }
   }
 
+  // Sport handlers
   async function handleAddSport(e) {
     e.preventDefault();
     try {
       await api.addSport(sportForm);
       setSportForm({ name: '' });
       loadAllData();
-      showMessage('success', 'Sport added successfully');
+      showMessage('success', 'Sport added');
     } catch (err) {
       showMessage('error', err.message);
     }
@@ -125,58 +201,75 @@ function Admin() {
     }
   }
 
-  async function handleAddEvent(e) {
+  // Medal Event handlers
+  async function handleAddMedalEvent(e) {
     e.preventDefault();
     try {
-      await api.addEvent(eventForm);
-      setEventForm({
-        sport_id: '',
-        name: '',
-        event_date: '',
-        venue: '',
-        status: 'scheduled',
-      });
+      const data = { ...medalEventForm, olympics_id: selectedOlympicsId };
+      await api.addMedalEvent(data);
+      setMedalEventForm({ olympics_id: selectedOlympicsId, sport_id: '', name: '', gender: 'mixed', event_type: 'individual', venue: '', scheduled_date: '' });
       loadAllData();
-      showMessage('success', 'Event added successfully');
+      showMessage('success', 'Medal event added');
     } catch (err) {
       showMessage('error', err.message);
     }
   }
 
-  async function handleUpdateEventStatus(id, status) {
+  async function handleDeleteMedalEvent(id) {
+    if (!confirm('Delete this medal event and all its rounds?')) return;
     try {
-      const event = events.find((e) => e.id === id);
-      await api.updateEvent(id, { ...event, status });
+      await api.deleteMedalEvent(id);
       loadAllData();
-      showMessage('success', 'Event status updated');
+      showMessage('success', 'Medal event deleted');
     } catch (err) {
       showMessage('error', err.message);
     }
   }
 
-  async function handleDeleteEvent(id) {
-    if (!confirm('Delete this event?')) return;
+  // Round handlers
+  async function handleAddRound(e) {
+    e.preventDefault();
     try {
-      await api.deleteEvent(id);
+      const data = { ...roundForm, start_time_utc: new Date(roundForm.start_time_utc).toISOString() };
+      await api.addRound(data);
+      setRoundForm({ medal_event_id: '', round_type: 'heat', round_number: 1, round_name: '', start_time_utc: '', venue: '' });
       loadAllData();
-      showMessage('success', 'Event deleted');
+      showMessage('success', 'Round added');
     } catch (err) {
       showMessage('error', err.message);
     }
   }
 
+  async function handleUpdateRoundStatus(id, status) {
+    try {
+      const round = rounds.find(r => r.id === id);
+      await api.updateRound(id, { ...round, status });
+      loadAllData();
+      showMessage('success', 'Round status updated');
+    } catch (err) {
+      showMessage('error', err.message);
+    }
+  }
+
+  async function handleDeleteRound(id) {
+    if (!confirm('Delete this round?')) return;
+    try {
+      await api.deleteRound(id);
+      loadAllData();
+      showMessage('success', 'Round deleted');
+    } catch (err) {
+      showMessage('error', err.message);
+    }
+  }
+
+  // Medal handlers
   async function handleAwardMedal(e) {
     e.preventDefault();
     try {
       await api.awardMedal(medalForm);
-      setMedalForm({
-        event_id: '',
-        country_id: '',
-        athlete_name: '',
-        medal_type: 'gold',
-      });
+      setMedalForm({ medal_event_id: '', country_id: '', athlete_name: '', medal_type: 'gold', result_value: '', record_type: '' });
       loadAllData();
-      showMessage('success', 'Medal awarded successfully');
+      showMessage('success', 'Medal awarded');
     } catch (err) {
       showMessage('error', err.message);
     }
@@ -193,26 +286,7 @@ function Admin() {
     }
   }
 
-  async function handleAddResult(e) {
-    e.preventDefault();
-    try {
-      await api.addResult(resultForm);
-      setResultForm({
-        event_id: '',
-        country_id: '',
-        athlete_name: '',
-        score: '',
-        position: '',
-      });
-      showMessage('success', 'Result added successfully');
-    } catch (err) {
-      showMessage('error', err.message);
-    }
-  }
-
-  if (isLoading) {
-    return <div className="loading"></div>;
-  }
+  if (isLoading) return <div className="loading"></div>;
 
   if (!isAuthenticated) {
     return (
@@ -223,19 +297,10 @@ function Admin() {
           <form onSubmit={handleLogin} className={styles.loginForm}>
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
-                required
-              />
+              <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter admin password" required />
             </div>
             {loginError && <p className={styles.loginError}>{loginError}</p>}
-            <button type="submit" className="btn btn-primary">
-              Login
-            </button>
+            <button type="submit" className="btn btn-primary">Login</button>
           </form>
         </div>
       </div>
@@ -249,30 +314,110 @@ function Admin() {
           <h1>Admin Panel</h1>
           <p>Manage Olympics data</p>
         </div>
-        <button onClick={logout} className="btn btn-secondary">
-          Logout
-        </button>
+        <button onClick={logout} className="btn btn-secondary">Logout</button>
       </header>
 
-      {message.text && (
-        <div className={`${styles.message} ${styles[message.type]}`}>
-          {message.text}
-        </div>
-      )}
+      {message.text && <div className={`${styles.message} ${styles[message.type]}`}>{message.text}</div>}
 
       <div className={styles.tabs}>
-        {['countries', 'sports', 'events', 'medals', 'results'].map((tab) => (
-          <button
-            key={tab}
-            className={`${styles.tab} ${activeTab === tab ? styles.activeTab : ''}`}
-            onClick={() => setActiveTab(tab)}
-          >
+        {['olympics', 'settings', 'countries', 'sports', 'events', 'rounds', 'medals'].map((tab) => (
+          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.activeTab : ''}`} onClick={() => setActiveTab(tab)}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
 
       <div className={styles.content}>
+        {/* OLYMPICS TAB */}
+        {activeTab === 'olympics' && (
+          <div className={styles.section}>
+            <h2>Manage Olympics</h2>
+            <p className={styles.hint}>Create and manage different Olympic games (Summer 2024, Winter 2026, etc.)</p>
+            <form onSubmit={handleAddOlympics} className={styles.form}>
+              <div className={styles.formGrid}>
+                <div className="form-group">
+                  <label>Name</label>
+                  <input type="text" value={olympicsForm.name} onChange={(e) => setOlympicsForm({ ...olympicsForm, name: e.target.value })} placeholder="e.g., Paris 2024" required />
+                </div>
+                <div className="form-group">
+                  <label>Year</label>
+                  <input type="number" value={olympicsForm.year} onChange={(e) => setOlympicsForm({ ...olympicsForm, year: parseInt(e.target.value) })} required />
+                </div>
+                <div className="form-group">
+                  <label>Type</label>
+                  <select value={olympicsForm.type} onChange={(e) => setOlympicsForm({ ...olympicsForm, type: e.target.value })}>
+                    {OLYMPICS_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>City</label>
+                  <input type="text" value={olympicsForm.city} onChange={(e) => setOlympicsForm({ ...olympicsForm, city: e.target.value })} placeholder="e.g., Paris" required />
+                </div>
+                <div className="form-group">
+                  <label>Country</label>
+                  <input type="text" value={olympicsForm.country} onChange={(e) => setOlympicsForm({ ...olympicsForm, country: e.target.value })} placeholder="e.g., France" required />
+                </div>
+                <div className="form-group">
+                  <label>Start Date</label>
+                  <input type="date" value={olympicsForm.start_date} onChange={(e) => setOlympicsForm({ ...olympicsForm, start_date: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>End Date</label>
+                  <input type="date" value={olympicsForm.end_date} onChange={(e) => setOlympicsForm({ ...olympicsForm, end_date: e.target.value })} />
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary">Add Olympics</button>
+            </form>
+            <div className={styles.list}>
+              {olympicsList.map((o) => (
+                <div key={o.id} className={`${styles.listItem} ${o.is_active ? styles.activeItem : ''}`}>
+                  <div className={styles.olympicsInfo}>
+                    <span className={styles.name}>{o.name}</span>
+                    <span className={styles.meta}>{o.city}, {o.country} · {OLYMPICS_TYPES.find(t => t.value === o.type)?.label}</span>
+                    <span className={styles.meta}>{o.event_count || 0} events · {o.medal_count || 0} medals</span>
+                  </div>
+                  <div className={styles.eventActions}>
+                    {o.is_active ? (
+                      <span className="badge badge-live">Active</span>
+                    ) : (
+                      <button onClick={() => handleActivateOlympics(o.id)} className="btn btn-secondary">Activate</button>
+                    )}
+                    <button onClick={() => handleDeleteOlympics(o.id)} className="btn btn-danger">Delete</button>
+                  </div>
+                </div>
+              ))}
+              {olympicsList.length === 0 && <p className={styles.empty}>No Olympics created yet.</p>}
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS TAB */}
+        {activeTab === 'settings' && (
+          <div className={styles.section}>
+            <h2>Global Settings</h2>
+            <form onSubmit={handleSaveSettings} className={styles.form}>
+              <div className={styles.formGrid}>
+                <div className="form-group">
+                  <label>Default Timezone (for data entry)</label>
+                  <select value={settingsForm.default_timezone} onChange={(e) => setSettingsForm({ ...settingsForm, default_timezone: e.target.value })}>
+                    <option value="America/New_York">Eastern Time (ET)</option>
+                    <option value="America/Chicago">Central Time (CT)</option>
+                    <option value="America/Denver">Mountain Time (MT)</option>
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="Europe/London">London (GMT/BST)</option>
+                    <option value="Europe/Paris">Paris (CET/CEST)</option>
+                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                    <option value="Australia/Sydney">Sydney (AEST)</option>
+                    <option value="UTC">UTC</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary">Save Settings</button>
+            </form>
+          </div>
+        )}
+
+        {/* COUNTRIES TAB */}
         {activeTab === 'countries' && (
           <div className={styles.section}>
             <h2>Manage Countries</h2>
@@ -280,55 +425,29 @@ function Admin() {
               <div className={styles.formRow}>
                 <div className="form-group">
                   <label>Country Name</label>
-                  <input
-                    type="text"
-                    value={countryForm.name}
-                    onChange={(e) =>
-                      setCountryForm({ ...countryForm, name: e.target.value })
-                    }
-                    placeholder="e.g., United States"
-                    required
-                  />
+                  <input type="text" value={countryForm.name} onChange={(e) => setCountryForm({ ...countryForm, name: e.target.value })} placeholder="e.g., United States" required />
                 </div>
                 <div className="form-group">
-                  <label>Country Code (3 letters)</label>
-                  <input
-                    type="text"
-                    value={countryForm.code}
-                    onChange={(e) =>
-                      setCountryForm({ ...countryForm, code: e.target.value.toUpperCase() })
-                    }
-                    placeholder="e.g., USA"
-                    maxLength={3}
-                    required
-                  />
+                  <label>Code (3 letters)</label>
+                  <input type="text" value={countryForm.code} onChange={(e) => setCountryForm({ ...countryForm, code: e.target.value.toUpperCase() })} placeholder="e.g., USA" maxLength={3} required />
                 </div>
-                <button type="submit" className="btn btn-primary">
-                  Add Country
-                </button>
+                <button type="submit" className="btn btn-primary">Add Country</button>
               </div>
             </form>
-
             <div className={styles.list}>
-              {countries.map((country) => (
-                <div key={country.id} className={styles.listItem}>
-                  <span className={styles.code}>{country.code}</span>
-                  <span className={styles.name}>{country.name}</span>
-                  <button
-                    onClick={() => handleDeleteCountry(country.id)}
-                    className="btn btn-danger"
-                  >
-                    Delete
-                  </button>
+              {countries.map((c) => (
+                <div key={c.id} className={styles.listItem}>
+                  <span className={styles.code}>{c.code}</span>
+                  <span className={styles.name}>{c.name}</span>
+                  <button onClick={() => handleDeleteCountry(c.id)} className="btn btn-danger">Delete</button>
                 </div>
               ))}
-              {countries.length === 0 && (
-                <p className={styles.empty}>No countries added yet.</p>
-              )}
+              {countries.length === 0 && <p className={styles.empty}>No countries added yet.</p>}
             </div>
           </div>
         )}
 
+        {/* SPORTS TAB */}
         {activeTab === 'sports' && (
           <div className={styles.section}>
             <h2>Manage Sports</h2>
@@ -336,321 +455,214 @@ function Admin() {
               <div className={styles.formRow}>
                 <div className="form-group">
                   <label>Sport Name</label>
-                  <input
-                    type="text"
-                    value={sportForm.name}
-                    onChange={(e) => setSportForm({ name: e.target.value })}
-                    placeholder="e.g., Swimming"
-                    required
-                  />
+                  <input type="text" value={sportForm.name} onChange={(e) => setSportForm({ name: e.target.value })} placeholder="e.g., Swimming" required />
                 </div>
-                <button type="submit" className="btn btn-primary">
-                  Add Sport
-                </button>
+                <button type="submit" className="btn btn-primary">Add Sport</button>
               </div>
             </form>
-
             <div className={styles.list}>
-              {sports.map((sport) => (
-                <div key={sport.id} className={styles.listItem}>
-                  <span className={styles.name}>{sport.name}</span>
-                  <button
-                    onClick={() => handleDeleteSport(sport.id)}
-                    className="btn btn-danger"
-                  >
-                    Delete
-                  </button>
+              {sports.map((s) => (
+                <div key={s.id} className={styles.listItem}>
+                  <span className={styles.name}>{s.name}</span>
+                  <button onClick={() => handleDeleteSport(s.id)} className="btn btn-danger">Delete</button>
                 </div>
               ))}
-              {sports.length === 0 && (
-                <p className={styles.empty}>No sports added yet.</p>
-              )}
+              {sports.length === 0 && <p className={styles.empty}>No sports added yet.</p>}
             </div>
           </div>
         )}
 
+        {/* MEDAL EVENTS TAB */}
         {activeTab === 'events' && (
           <div className={styles.section}>
-            <h2>Manage Events</h2>
-            <form onSubmit={handleAddEvent} className={styles.form}>
+            <h2>Manage Medal Events</h2>
+            <p className={styles.hint}>
+              Medal events for the currently selected Olympics. Use the dropdown in the header to switch Olympics.
+              {!selectedOlympicsId && <strong> Please create an Olympics first.</strong>}
+            </p>
+            <form onSubmit={handleAddMedalEvent} className={styles.form}>
               <div className={styles.formGrid}>
                 <div className="form-group">
                   <label>Sport</label>
-                  <select
-                    value={eventForm.sport_id}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, sport_id: e.target.value })
-                    }
-                  >
+                  <select value={medalEventForm.sport_id} onChange={(e) => setMedalEventForm({ ...medalEventForm, sport_id: e.target.value })} required>
                     <option value="">Select Sport</option>
-                    {sports.map((sport) => (
-                      <option key={sport.id} value={sport.id}>
-                        {sport.name}
-                      </option>
-                    ))}
+                    {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Event Name</label>
-                  <input
-                    type="text"
-                    value={eventForm.name}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, name: e.target.value })
-                    }
-                    placeholder="e.g., Men's 100m Freestyle"
-                    required
-                  />
+                  <input type="text" value={medalEventForm.name} onChange={(e) => setMedalEventForm({ ...medalEventForm, name: e.target.value })} placeholder="e.g., 100m Freestyle" required />
                 </div>
                 <div className="form-group">
-                  <label>Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    value={eventForm.event_date}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, event_date: e.target.value })
-                    }
-                  />
+                  <label>Gender</label>
+                  <select value={medalEventForm.gender} onChange={(e) => setMedalEventForm({ ...medalEventForm, gender: e.target.value })}>
+                    <option value="men">Men</option>
+                    <option value="women">Women</option>
+                    <option value="mixed">Mixed</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Type</label>
+                  <select value={medalEventForm.event_type} onChange={(e) => setMedalEventForm({ ...medalEventForm, event_type: e.target.value })}>
+                    <option value="individual">Individual</option>
+                    <option value="team">Team</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Venue</label>
-                  <input
-                    type="text"
-                    value={eventForm.venue}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, venue: e.target.value })
-                    }
-                    placeholder="e.g., Olympic Aquatics Centre"
-                  />
+                  <input type="text" value={medalEventForm.venue} onChange={(e) => setMedalEventForm({ ...medalEventForm, venue: e.target.value })} placeholder="e.g., Aquatics Centre" />
+                </div>
+                <div className="form-group">
+                  <label>Final Date</label>
+                  <input type="date" value={medalEventForm.scheduled_date} onChange={(e) => setMedalEventForm({ ...medalEventForm, scheduled_date: e.target.value })} />
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary">
-                Add Event
-              </button>
+              <button type="submit" className="btn btn-primary">Add Medal Event</button>
             </form>
-
             <div className={styles.list}>
-              {events.map((event) => (
-                <div key={event.id} className={styles.eventItem}>
+              {medalEvents.map((e) => (
+                <div key={e.id} className={styles.eventItem}>
                   <div className={styles.eventInfo}>
-                    <span className={styles.name}>{event.name}</span>
-                    {event.sport_name && (
-                      <span className={styles.sport}>{event.sport_name}</span>
-                    )}
-                    {event.venue && (
-                      <span className={styles.venue}>{event.venue}</span>
-                    )}
+                    <span className={styles.name}>{e.gender === 'men' ? "Men's" : e.gender === 'women' ? "Women's" : ''} {e.name}</span>
+                    <span className={styles.sport}>{e.sport_name}</span>
+                    <span className={styles.meta}>{e.round_count} rounds · {e.medal_count} medals</span>
                   </div>
-                  <div className={styles.eventActions}>
-                    <select
-                      value={event.status}
-                      onChange={(e) =>
-                        handleUpdateEventStatus(event.id, e.target.value)
-                      }
-                      className={styles.statusSelect}
-                    >
-                      <option value="scheduled">Scheduled</option>
-                      <option value="live">Live</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                    <button
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="btn btn-danger"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <button onClick={() => handleDeleteMedalEvent(e.id)} className="btn btn-danger">Delete</button>
                 </div>
               ))}
-              {events.length === 0 && (
-                <p className={styles.empty}>No events added yet.</p>
-              )}
+              {medalEvents.length === 0 && <p className={styles.empty}>No medal events added yet.</p>}
             </div>
           </div>
         )}
 
+        {/* ROUNDS TAB */}
+        {activeTab === 'rounds' && (
+          <div className={styles.section}>
+            <h2>Manage Event Rounds</h2>
+            <p className={styles.hint}>Rounds are the sub-events (heats, semifinals, finals) scheduled at specific times.</p>
+            <form onSubmit={handleAddRound} className={styles.form}>
+              <div className={styles.formGrid}>
+                <div className="form-group">
+                  <label>Medal Event</label>
+                  <select value={roundForm.medal_event_id} onChange={(e) => setRoundForm({ ...roundForm, medal_event_id: e.target.value })} required>
+                    <option value="">Select Medal Event</option>
+                    {medalEvents.map((e) => <option key={e.id} value={e.id}>{e.sport_name}: {e.gender === 'men' ? "M" : e.gender === 'women' ? "W" : ""} {e.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Round Type</label>
+                  <select value={roundForm.round_type} onChange={(e) => setRoundForm({ ...roundForm, round_type: e.target.value })}>
+                    {ROUND_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Round Number</label>
+                  <input type="number" min="1" value={roundForm.round_number} onChange={(e) => setRoundForm({ ...roundForm, round_number: parseInt(e.target.value) || 1 })} />
+                </div>
+                <div className="form-group">
+                  <label>Custom Name (optional)</label>
+                  <input type="text" value={roundForm.round_name} onChange={(e) => setRoundForm({ ...roundForm, round_name: e.target.value })} placeholder="e.g., Heat 3A" />
+                </div>
+                <div className="form-group">
+                  <label>Start Time (your local time)</label>
+                  <input type="datetime-local" value={roundForm.start_time_utc} onChange={(e) => setRoundForm({ ...roundForm, start_time_utc: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label>Venue (optional)</label>
+                  <input type="text" value={roundForm.venue} onChange={(e) => setRoundForm({ ...roundForm, venue: e.target.value })} placeholder="Override event venue" />
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary">Add Round</button>
+            </form>
+            <div className={styles.list}>
+              {rounds.map((r) => (
+                <div key={r.id} className={styles.eventItem}>
+                  <div className={styles.eventInfo}>
+                    <span className={styles.name}>
+                      {r.round_name || `${ROUND_TYPES.find(t => t.value === r.round_type)?.label || r.round_type}${r.round_number > 1 ? ` ${r.round_number}` : ''}`}
+                    </span>
+                    <span className={styles.sport}>{r.medal_event_name}</span>
+                    <span className={styles.meta}>{new Date(r.start_time_utc).toLocaleString()}</span>
+                  </div>
+                  <div className={styles.eventActions}>
+                    <select value={r.status} onChange={(e) => handleUpdateRoundStatus(r.id, e.target.value)} className={styles.statusSelect}>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="delayed">Delayed</option>
+                      <option value="live">Live</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button onClick={() => handleDeleteRound(r.id)} className="btn btn-danger">Delete</button>
+                  </div>
+                </div>
+              ))}
+              {rounds.length === 0 && <p className={styles.empty}>No rounds added yet. Create medal events first.</p>}
+            </div>
+          </div>
+        )}
+
+        {/* MEDALS TAB */}
         {activeTab === 'medals' && (
           <div className={styles.section}>
             <h2>Award Medals</h2>
             <form onSubmit={handleAwardMedal} className={styles.form}>
               <div className={styles.formGrid}>
                 <div className="form-group">
-                  <label>Event</label>
-                  <select
-                    value={medalForm.event_id}
-                    onChange={(e) =>
-                      setMedalForm({ ...medalForm, event_id: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Select Event</option>
-                    {events.map((event) => (
-                      <option key={event.id} value={event.id}>
-                        {event.name}
-                      </option>
-                    ))}
+                  <label>Medal Event</label>
+                  <select value={medalForm.medal_event_id} onChange={(e) => setMedalForm({ ...medalForm, medal_event_id: e.target.value })} required>
+                    <option value="">Select Medal Event</option>
+                    {medalEvents.map((e) => <option key={e.id} value={e.id}>{e.sport_name}: {e.gender === 'men' ? "M" : e.gender === 'women' ? "W" : ""} {e.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Country</label>
-                  <select
-                    value={medalForm.country_id}
-                    onChange={(e) =>
-                      setMedalForm({ ...medalForm, country_id: e.target.value })
-                    }
-                    required
-                  >
+                  <select value={medalForm.country_id} onChange={(e) => setMedalForm({ ...medalForm, country_id: e.target.value })} required>
                     <option value="">Select Country</option>
-                    {countries.map((country) => (
-                      <option key={country.id} value={country.id}>
-                        {country.code} - {country.name}
-                      </option>
-                    ))}
+                    {countries.map((c) => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Athlete Name</label>
-                  <input
-                    type="text"
-                    value={medalForm.athlete_name}
-                    onChange={(e) =>
-                      setMedalForm({ ...medalForm, athlete_name: e.target.value })
-                    }
-                    placeholder="e.g., Michael Phelps"
-                    required
-                  />
+                  <label>Athlete/Team Name</label>
+                  <input type="text" value={medalForm.athlete_name} onChange={(e) => setMedalForm({ ...medalForm, athlete_name: e.target.value })} placeholder="e.g., Michael Phelps" required />
                 </div>
                 <div className="form-group">
-                  <label>Medal Type</label>
-                  <select
-                    value={medalForm.medal_type}
-                    onChange={(e) =>
-                      setMedalForm({ ...medalForm, medal_type: e.target.value })
-                    }
-                  >
+                  <label>Medal</label>
+                  <select value={medalForm.medal_type} onChange={(e) => setMedalForm({ ...medalForm, medal_type: e.target.value })}>
                     <option value="gold">Gold</option>
                     <option value="silver">Silver</option>
                     <option value="bronze">Bronze</option>
                   </select>
                 </div>
+                <div className="form-group">
+                  <label>Result (optional)</label>
+                  <input type="text" value={medalForm.result_value} onChange={(e) => setMedalForm({ ...medalForm, result_value: e.target.value })} placeholder="e.g., 47.52s" />
+                </div>
+                <div className="form-group">
+                  <label>Record (optional)</label>
+                  <select value={medalForm.record_type} onChange={(e) => setMedalForm({ ...medalForm, record_type: e.target.value })}>
+                    <option value="">None</option>
+                    <option value="WR">World Record (WR)</option>
+                    <option value="OR">Olympic Record (OR)</option>
+                    <option value="PB">Personal Best (PB)</option>
+                  </select>
+                </div>
               </div>
-              <button type="submit" className="btn btn-primary">
-                Award Medal
-              </button>
+              <button type="submit" className="btn btn-primary">Award Medal</button>
             </form>
-
             <div className={styles.list}>
-              {medals.map((medal) => (
-                <div key={medal.id} className={styles.medalItem}>
-                  <span className={`medal medal-${medal.medal_type}`}>
-                    {medal.medal_type.charAt(0).toUpperCase()}
-                  </span>
+              {medals.map((m) => (
+                <div key={m.id} className={styles.medalItem}>
+                  <span className={`medal medal-${m.medal_type}`}>{m.medal_type.charAt(0).toUpperCase()}</span>
                   <div className={styles.medalInfo}>
-                    <span className={styles.name}>{medal.athlete_name}</span>
-                    <span className={styles.details}>
-                      {medal.country_code} - {medal.event_name}
-                    </span>
+                    <span className={styles.name}>{m.athlete_name}</span>
+                    <span className={styles.details}>{m.country_code} · {m.event_name} {m.record_type && <strong>({m.record_type})</strong>}</span>
+                    {m.result_value && <span className={styles.result}>{m.result_value}</span>}
                   </div>
-                  <button
-                    onClick={() => handleDeleteMedal(medal.id)}
-                    className="btn btn-danger"
-                  >
-                    Remove
-                  </button>
+                  <button onClick={() => handleDeleteMedal(m.id)} className="btn btn-danger">Remove</button>
                 </div>
               ))}
-              {medals.length === 0 && (
-                <p className={styles.empty}>No medals awarded yet.</p>
-              )}
+              {medals.length === 0 && <p className={styles.empty}>No medals awarded yet.</p>}
             </div>
-          </div>
-        )}
-
-        {activeTab === 'results' && (
-          <div className={styles.section}>
-            <h2>Add Live Results</h2>
-            <form onSubmit={handleAddResult} className={styles.form}>
-              <div className={styles.formGrid}>
-                <div className="form-group">
-                  <label>Event</label>
-                  <select
-                    value={resultForm.event_id}
-                    onChange={(e) =>
-                      setResultForm({ ...resultForm, event_id: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Select Event</option>
-                    {events
-                      .filter((e) => e.status === 'live')
-                      .map((event) => (
-                        <option key={event.id} value={event.id}>
-                          {event.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Country</label>
-                  <select
-                    value={resultForm.country_id}
-                    onChange={(e) =>
-                      setResultForm({ ...resultForm, country_id: e.target.value })
-                    }
-                  >
-                    <option value="">Select Country</option>
-                    {countries.map((country) => (
-                      <option key={country.id} value={country.id}>
-                        {country.code} - {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Athlete Name</label>
-                  <input
-                    type="text"
-                    value={resultForm.athlete_name}
-                    onChange={(e) =>
-                      setResultForm({ ...resultForm, athlete_name: e.target.value })
-                    }
-                    placeholder="Athlete or Team name"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Score/Time</label>
-                  <input
-                    type="text"
-                    value={resultForm.score}
-                    onChange={(e) =>
-                      setResultForm({ ...resultForm, score: e.target.value })
-                    }
-                    placeholder="e.g., 47.52 or 3-2"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Position</label>
-                  <input
-                    type="number"
-                    value={resultForm.position}
-                    onChange={(e) =>
-                      setResultForm({ ...resultForm, position: e.target.value })
-                    }
-                    placeholder="1, 2, 3..."
-                    min="1"
-                  />
-                </div>
-              </div>
-              <button type="submit" className="btn btn-primary">
-                Add Result
-              </button>
-            </form>
-
-            {events.filter((e) => e.status === 'live').length === 0 && (
-              <p className={styles.hint}>
-                Set an event status to "Live" in the Events tab to add results.
-              </p>
-            )}
           </div>
         )}
       </div>

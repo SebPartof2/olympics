@@ -11,6 +11,12 @@
   align-items: center;
 }
 
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -21,6 +27,31 @@
 
 .logo:hover {
   text-decoration: none;
+}
+
+.olympicsSelector {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.olympicsSelector:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.olympicsSelector:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.olympicsSelector option {
+  background-color: var(--olympic-blue);
+  color: white;
 }
 
 .rings {
